@@ -1,6 +1,5 @@
+import { MAX_OUTPUT_TOKENS, REASONING_EFFORT } from "./limits";
 import type { ChatSettings } from "./openai";
-import { extractOpenAiText } from "./openai";
-import { postJson } from "./http";
 
 export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -18,8 +17,10 @@ export function buildOpenRouterRequest(settings: ChatSettings, system: string, u
       body: JSON.stringify({
         model: settings.model,
         temperature: 0.2,
-        max_tokens: 2500,
-        response_format: { type: "json_object" },
+        max_tokens: MAX_OUTPUT_TOKENS,
+        // Ignored by models that do not reason.
+        reasoning: { effort: REASONING_EFFORT },
+        stream: true,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -27,15 +28,4 @@ export function buildOpenRouterRequest(settings: ChatSettings, system: string, u
       }),
     },
   };
-}
-
-export async function completeOpenRouter(
-  settings: ChatSettings,
-  system: string,
-  user: string,
-  fetchImpl: typeof fetch,
-): Promise<string> {
-  const request = buildOpenRouterRequest(settings, system, user);
-  const payload = await postJson(fetchImpl, "openrouter", request.url, request.init);
-  return extractOpenAiText(payload, "openrouter");
 }

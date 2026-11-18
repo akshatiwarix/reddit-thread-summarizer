@@ -25,12 +25,12 @@ export type { FetchThreadOptions, RedditCredentials } from "./reddit/fetch-threa
 export { ThreadFetchError, threadFetchStatus } from "./reddit/fetch-error";
 export type { ThreadFetchKind } from "./reddit/fetch-error";
 
-export { SUMMARY_JSON_SCHEMA } from "./summary/schema";
 export { buildSystemPrompt, buildUserPrompt } from "./summary/prompt";
-export { parseModelOutput, SummaryParseError } from "./summary/parse-output";
+export { parseSummaryMarkdown, permalinkKey, SummaryParseError } from "./summary/parse-markdown";
 
 export { ProviderError, errorFromResponse } from "./providers/errors";
 export type { ProviderErrorKind } from "./providers/errors";
+export { MAX_OUTPUT_TOKENS } from "./providers/limits";
 export { PROVIDERS, isProviderId, providerInfo } from "./providers/catalog";
 export type { ProviderInfo } from "./providers/catalog";
 export { defaultSettings, modelForProvider, normalizeSettings } from "./providers/settings";

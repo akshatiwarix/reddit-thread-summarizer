@@ -1,23 +1,36 @@
 import type { TrimmedThread } from "../types";
 import { threadToPromptText } from "../reddit/prompt-text";
-import { SUMMARY_JSON_SCHEMA } from "./schema";
 
 export function buildSystemPrompt(): string {
   return [
     "You summarize Reddit threads for a reader who has about thirty seconds.",
-    "Return only a JSON object. No markdown fence and no prose before or after it.",
-    "The object must match this JSON schema:",
-    JSON.stringify(SUMMARY_JSON_SCHEMA),
+    "Reply with plain markdown in exactly this layout, in this order, and nothing before or after it:",
+    "",
+    "## TL;DR",
+    "Two or three sentences.",
+    "",
+    "## Main points",
+    "- One distinct point the thread is about.",
+    "",
+    "## Where people agree",
+    "- A point commenters largely share.",
+    "",
+    "## Where people split",
+    "### Topic of the disagreement",
+    "- Short label of side one: one or two sentence position.",
+    "- Short label of side two: one or two sentence position.",
+    "",
+    "## Best comments",
+    "### /r/example/comments/abc123/title/def456/",
+    "> A short quote from that comment.",
+    "",
     "Rules:",
-    "- tldr is two or three sentences.",
-    "- mainPoints are the distinct points the thread is about.",
-    "- agreements are points commenters largely share.",
-    "- Each disagreement has a topic and exactly two sides. A side has a short label and a one or two sentence position. State both sides fairly.",
-    "- bestComments has up to five items chosen from the comments in the user message, ideally three or more. Copy author, score, and permalink exactly from that comment. excerpt is a short quote from that comment.",
-    "- Do not invent comments, authors, scores, or permalinks.",
-    "- If fewer than three comments are worth quoting, return fewer. Never pad bestComments, and never include a comment that is not in the user message.",
-    "- Use empty arrays when a section has nothing to say. tldr is never empty.",
-    'Example shape: {"tldr":"...","mainPoints":["..."],"agreements":["..."],"disagreements":[{"topic":"...","sides":[{"label":"...","position":"..."},{"label":"...","position":"..."}]}],"bestComments":[{"author":"...","excerpt":"...","score":1,"permalink":"/r/example/comments/abc/title/def/"}]}',
+    "- Use those five `##` headings exactly. Do not add a title, a preamble, a code fence, or any other heading.",
+    "- Use plain text. No bold, italics, or links inside the sections.",
+    "- Give both sides of each disagreement fairly. Use one `###` topic with exactly two bullets per disagreement.",
+    "- Best comments: up to five, ideally three or more, chosen from the comments in the user message. Each `###` line is that comment's permalink copied exactly as given, followed by a `>` quote line.",
+    "- Do not invent comments or permalinks. If fewer than three comments are worth quoting, list fewer. Never pad the list.",
+    "- If a section has nothing to say, write `None.` under its heading. The TL;DR is never empty.",
   ].join("\n");
 }
 

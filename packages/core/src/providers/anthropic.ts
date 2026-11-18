@@ -1,12 +1,15 @@
 import { asRecord } from "../record";
-import { ProviderError } from "./errors";
-import { postJson } from "./http";
-import { joinTextParts } from "./text";
+import { MAX_OUTPUT_TOKENS, REASONING_EFFORT } from "./limits";
+import { streamError } from "./stream";
 import type { ChatSettings } from "./openai";
 
 export const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 export const ANTHROPIC_VERSION = "2023-06-01";
-export const ANTHROPIC_MAX_TOKENS = 16000;
+
+/** `output_config.effort` exists on the Claude 4.5+ families. Older models reject unknown fields. */
+function supportsEffort(model: string): boolean {
+  return /^claude-(haiku|sonnet|opus|fable|mythos)-(?:[5-9]|4-[5-9])/i.test(model.trim());
+}
 
 export function buildAnthropicRequest(settings: ChatSettings, system: string, user: string) {
   return {
@@ -22,9 +25,10 @@ export function buildAnthropicRequest(settings: ChatSettings, system: string, us
       },
       body: JSON.stringify({
         model: settings.model,
-        // Current Claude models reject `temperature`. Thinking tokens count against
-        // max_tokens, so leave room for thinking plus the JSON summary.
-        max_tokens: ANTHROPIC_MAX_TOKENS,
+        // Current Claude models reject `temperature`. Thinking tokens count against max_tokens.
+        max_tokens: MAX_OUTPUT_TOKENS,
+        ...(supportsEffort(settings.model) ? { output_config: { effort: REASONING_EFFORT } } : {}),
+        stream: true,
         system,
         messages: [{ role: "user", content: user }],
       }),
@@ -32,21 +36,11 @@ export function buildAnthropicRequest(settings: ChatSettings, system: string, us
   };
 }
 
-export function extractAnthropicText(payload: unknown): string {
-  const text = joinTextParts(asRecord(payload)?.content);
-  if (!text) {
-    throw new ProviderError("Anthropic returned an empty response.", { kind: "provider", provider: "anthropic" });
-  }
-  return text;
-}
-
-export async function completeAnthropic(
-  settings: ChatSettings,
-  system: string,
-  user: string,
-  fetchImpl: typeof fetch,
-): Promise<string> {
-  const request = buildAnthropicRequest(settings, system, user);
-  const payload = await postJson(fetchImpl, "anthropic", request.url, request.init);
-  return extractAnthropicText(payload);
+/** Text carried by one Messages stream event. Thinking deltas are ignored. */
+export function anthropicDelta(payload: unknown): string {
+  const record = asRecord(payload);
+  if (record?.type === "error") throw streamError("anthropic", record.error);
+  if (record?.type !== "content_block_delta") return "";
+  const delta = asRecord(record.delta);
+  return delta?.type === "text_delta" && typeof delta.text === "string" ? delta.text : "";
 }

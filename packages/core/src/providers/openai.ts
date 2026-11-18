@@ -1,8 +1,7 @@
 import { asRecord } from "../record";
 import type { ProviderId } from "../types";
-import { ProviderError } from "./errors";
-import { postJson } from "./http";
-import { joinTextParts } from "./text";
+import { MAX_OUTPUT_TOKENS, REASONING_EFFORT } from "./limits";
+import { streamError } from "./stream";
 
 export const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
@@ -15,9 +14,9 @@ export function isOpenAiReasoningModel(model: string): boolean {
 
 export function buildOpenAiRequest(settings: ChatSettings, system: string, user: string) {
   const limits = isOpenAiReasoningModel(settings.model)
-    ? // Reasoning tokens count against the limit, so leave room for the JSON.
-      { max_completion_tokens: 16000 }
-    : { temperature: 0.2, max_tokens: 2500 };
+    ? // Reasoning tokens count against the limit. Low effort keeps them short.
+      { max_completion_tokens: MAX_OUTPUT_TOKENS, reasoning_effort: REASONING_EFFORT }
+    : { temperature: 0.2, max_tokens: MAX_OUTPUT_TOKENS };
   return {
     url: OPENAI_URL,
     init: {
@@ -29,7 +28,7 @@ export function buildOpenAiRequest(settings: ChatSettings, system: string, user:
       body: JSON.stringify({
         model: settings.model,
         ...limits,
-        response_format: { type: "json_object" },
+        stream: true,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -39,18 +38,12 @@ export function buildOpenAiRequest(settings: ChatSettings, system: string, user:
   };
 }
 
-export function extractOpenAiText(payload: unknown, provider: ProviderId = "openai"): string {
-  const choices = asRecord(payload)?.choices;
+/** Text carried by one chat-completions stream chunk. Shared with OpenRouter. */
+export function openAiDelta(payload: unknown, provider: ProviderId = "openai"): string {
+  const record = asRecord(payload);
+  if (record?.error) throw streamError(provider, record.error);
+  const choices = record?.choices;
   const first = Array.isArray(choices) ? asRecord(choices[0]) : null;
-  const text = joinTextParts(asRecord(first?.message)?.content);
-  if (!text) {
-    throw new ProviderError("The provider returned an empty response.", { kind: "provider", provider });
-  }
-  return text;
-}
-
-export async function completeOpenAi(settings: ChatSettings, system: string, user: string, fetchImpl: typeof fetch): Promise<string> {
-  const request = buildOpenAiRequest(settings, system, user);
-  const payload = await postJson(fetchImpl, "openai", request.url, request.init);
-  return extractOpenAiText(payload);
+  const content = asRecord(first?.delta)?.content;
+  return typeof content === "string" ? content : "";
 }

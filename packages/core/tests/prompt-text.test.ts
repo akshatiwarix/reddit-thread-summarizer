@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { buildSystemPrompt, buildUserPrompt } from "../src/summary/prompt";
-import { SUMMARY_JSON_SCHEMA } from "../src/summary/schema";
 import type { TrimmedThread } from "../src/types";
 
 const thread: TrimmedThread = {
@@ -44,10 +43,12 @@ describe("prompt text", () => {
     expect(text).toContain("trimmed");
   });
 
-  it("asks for the shared schema", () => {
+  it("asks for the streaming markdown layout", () => {
     const system = buildSystemPrompt();
-    expect(system).toContain(JSON.stringify(SUMMARY_JSON_SCHEMA));
-    expect(system).toContain("exactly two sides");
-    expect(system).toContain("bestComments");
+    for (const heading of ["## TL;DR", "## Main points", "## Where people agree", "## Where people split", "## Best comments"]) {
+      expect(system).toContain(heading);
+    }
+    expect(system).toContain("up to five");
+    expect(system).not.toContain("JSON");
   });
 });

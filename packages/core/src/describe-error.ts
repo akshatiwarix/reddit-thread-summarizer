@@ -1,7 +1,7 @@
 import { ProviderError } from "./providers/errors";
 import { RedditParseError } from "./reddit/errors";
 import { ThreadFetchError } from "./reddit/fetch-error";
-import { SummaryParseError } from "./summary/parse-output";
+import { SummaryParseError } from "./summary/parse-markdown";
 
 export function describeError(error: unknown): string {
   if (
