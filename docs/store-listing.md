@@ -1,6 +1,6 @@
 # Chrome Web Store listing
 
-Ready to paste. Akshat submits this from the Chrome Web Store developer account. The privacy policy URL below is a placeholder until the web app has a public Vercel URL.
+Ready to paste. Akshat submits this from the Chrome Web Store developer account.
 
 ## Category
 
@@ -26,8 +26,6 @@ You bring your own API key. Choose OpenAI, Anthropic, Google Gemini, or OpenRout
 
 The extension reads the thread's JSON from reddit.com. That request includes your existing Reddit cookies, the same as opening the page, so it works for threads your logged-in session can see. The extension does not read, store, or forward those cookies, and it does not post, vote, or message.
 
-There is also a website in this project where you can paste a thread URL and see the same summary. The privacy policy is on that site.
-
 ## Permission justifications
 
 These match the production manifest in the release zip.
@@ -50,9 +48,9 @@ The package includes an original mark at 16, 32, 48, and 128 pixels. The store i
 
 ## Privacy policy URL
 
-`https://YOUR-DEPLOYMENT.vercel.app/privacy`
+https://github.com/akshatiwarix/reddit-thread-summarizer/blob/main/PRIVACY.md
 
-Replace `YOUR-DEPLOYMENT` with the Vercel hostname after the web app is deployed. The page states that no account or analytics data is collected and that API keys stay in the browser.
+The policy states that there is no server, account or analytics, and that API keys and history stay in `chrome.storage.local` on the device.
 
 ## Single purpose
 

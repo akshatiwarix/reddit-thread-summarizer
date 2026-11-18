@@ -4,7 +4,7 @@ Read `docs/PLAN.md` first. It holds every agreed decision. Do not expand the sco
 
 ## Rules
 
-- Monorepo with pnpm workspaces: `apps/extension` (WXT + React + TS), `apps/web` (Next.js), `packages/core` (shared).
+- Monorepo with pnpm workspaces: `apps/extension` (WXT + React + TS, the only app) and `packages/core` (shared parsing, providers, history logic). There is no web app.
 - Work directly on `main`. After each small, self-contained chunk (one feature, one fix, one file group), run the relevant checks, then commit with a clear conventional message (`feat:`, `fix:`, `test:`, `docs:`, `chore:`) and push. Never make empty or cosmetic-only commits to inflate the count.
 - Never commit API keys, `.env` files or secrets. User keys live only in the browser.
 - Never add challenge or "Day N" badges anywhere.

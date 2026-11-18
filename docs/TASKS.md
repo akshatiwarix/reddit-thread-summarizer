@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered, commit-sized checklist for v1. Check an item when that chunk is committed on `main`.
+Ordered, commit-sized checklist for v1. Check an item when that chunk is committed on `main`. `[-]` marks a task dropped when the web app was removed; the record is kept on purpose.
 
 ## Monorepo setup
 
@@ -13,9 +13,9 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Scaffold `packages/core` package metadata and TypeScript project
 - [x] Add the core test runner config
 - [x] Scaffold the WXT extension package
-- [x] Scaffold the Next.js web package and config
-- [x] Add the web TypeScript project
-- [x] Add a web env example that names the Reddit credentials and stores none
+- [-] Scaffold the Next.js web package and config (dropped)
+- [-] Add the web TypeScript project (dropped)
+- [-] Add a web env example that names the Reddit credentials and stores none (dropped)
 
 ## packages/core
 
@@ -66,11 +66,11 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Test invalid model output from a successful HTTP response
 - [x] Export the core public API
 - [x] Fetch a public thread JSON document
-- [x] Exchange Reddit app-only OAuth credentials
-- [x] Fall back to OAuth when the public endpoint is blocked
-- [x] Leave a missing thread as not-found instead of hiding it behind OAuth
+- [-] Exchange Reddit app-only OAuth credentials (dropped)
+- [-] Fall back to OAuth when the public endpoint is blocked (dropped)
+- [-] Leave a missing thread as not-found instead of hiding it behind OAuth (dropped)
 - [x] Test the public fetch success path
-- [x] Test the OAuth fallback and the missing-credentials error
+- [-] Test the OAuth fallback and the missing-credentials error (dropped)
 
 ## Extension
 
@@ -109,27 +109,29 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Extension: paste a Reddit link and summarize it, next to Summarize this tab
 - [x] Extension: validate the pasted link and clear the previous summary on a new run
 - [x] Extension: open a pasted link's best comments in a new tab
-- [x] Extension and web: Fetching, Summarizing and Writing progress states with the summary filling in
+- [x] Extension (web half dropped): Fetching, Summarizing and Writing progress states with the summary filling in
 - [x] Update PLAN, README, permissions notes and the store listing
 
-## Web app
+## Web app (dropped)
 
-- [x] Configure Next.js to compile the shared core package
-- [x] Add the document shell, metadata, and base styles
-- [x] Store provider settings in `localStorage` only
-- [x] Build the key settings dialog
-- [x] Build the thread URL form
-- [x] Render the summary sections
-- [x] Render best comments with permalinks
-- [x] Compose the home page
-- [x] Show loading and error states on the home page
-- [x] Add the server route that parses a pasted URL
-- [x] Call the public Reddit JSON endpoint from that route
-- [x] Use the OAuth fallback when Reddit blocks the public endpoint
-- [x] Map fetch failures to HTTP status codes without leaking secrets
-- [x] Add the privacy policy page
-- [x] Link the privacy page from the home page
-- [x] Call the thread route and then the provider from the browser
+The web app was removed; these tasks are kept as history and will not be done again.
+
+- [-] Configure Next.js to compile the shared core package (dropped)
+- [-] Add the document shell, metadata, and base styles (dropped)
+- [-] Store provider settings in `localStorage` only (dropped)
+- [-] Build the key settings dialog (dropped)
+- [-] Build the thread URL form (dropped)
+- [-] Render the summary sections (dropped)
+- [-] Render best comments with permalinks (dropped)
+- [-] Compose the home page (dropped)
+- [-] Show loading and error states on the home page (dropped)
+- [-] Add the server route that parses a pasted URL (dropped)
+- [-] Call the public Reddit JSON endpoint from that route (dropped)
+- [-] Use the OAuth fallback when Reddit blocks the public endpoint (dropped)
+- [-] Map fetch failures to HTTP status codes without leaking secrets (dropped)
+- [-] Add the privacy policy page (dropped)
+- [-] Link the privacy page from the home page (dropped)
+- [-] Call the thread route and then the provider from the browser (dropped)
 
 ## Tests and checks
 
@@ -147,10 +149,10 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Document key setup for OpenAI and Anthropic
 - [x] Document key setup for Gemini and OpenRouter
 - [x] Document local development commands
-- [x] Document the Vercel deploy with root `apps/web`
-- [x] Document the optional Reddit env vars
+- [-] Document the Vercel deploy with root `apps/web` (dropped)
+- [-] Document the optional Reddit env vars (dropped)
 - [x] Add the privacy note
-- [x] Add the live URL placeholder and the screenshot placeholder
+- [-] Add the live URL placeholder and the screenshot placeholder (dropped)
 - [x] Add the packaging script that produces the extension zip
 
 ## Chrome Web Store listing
@@ -169,8 +171,16 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Unit-test insert, replace-and-promote, cap, delete, clear, ordering, search, www vs old, different threads
 - [x] Extension: `chrome.storage.local` adapter, History tab, save on success only
 - [x] Extension: open saved summary, Open thread, Re-summarize, delete one, clear all with confirm, empty states
-- [x] Web: `localStorage` adapter, History tab, save on success only, quota error message
-- [x] Web: open saved summary, Open thread, Re-summarize, delete one, clear all with confirm, empty states
+- [-] Web: `localStorage` adapter, History tab, save on success only, quota error message (dropped)
+- [-] Web: open saved summary, Open thread, Re-summarize, delete one, clear all with confirm, empty states (dropped)
 - [x] History on/off toggle (default on) in both settings screens
 - [x] Update README, privacy page, PERMISSIONS.md and store listing
 - [x] Rebuild the unpacked extension
+
+## Extension only
+
+- [x] Remove the web app, its scripts and its lockfile entries
+- [x] Remove the server-only Reddit OAuth fallback from `packages/core`
+- [x] Rewrite CLAUDE.md, PLAN, README and the store listing for the extension only
+- [x] Add a root `PRIVACY.md` and point the store listing at it
+- [x] Rebuild the unpacked extension and confirm the manifest is unchanged

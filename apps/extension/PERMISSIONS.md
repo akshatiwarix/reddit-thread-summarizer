@@ -4,7 +4,7 @@ The production manifest asks for as little as possible. Each entry is required f
 
 ## storage
 
-Saves the provider, model, and API key in `chrome.storage.local` on this device. Summary history (up to 200 finished summaries, plus an on/off setting) is stored there too. It uses this same permission, so history needed no new permission. It stays on the device and is never sent anywhere. The key is not sent to the extension author and is not included in the thread request to our web app. There is no web app call from the extension.
+Saves the provider, model, and API key in `chrome.storage.local` on this device. Summary history (up to 200 finished summaries, plus an on/off setting) is stored there too. It uses this same permission, so history needed no new permission. It stays on the device and is never sent anywhere. The key is not sent to the extension author and is not included in the Reddit request. The extension talks to no server of its own.
 
 ## sidePanel
 
