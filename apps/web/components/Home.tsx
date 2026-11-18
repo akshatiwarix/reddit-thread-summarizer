@@ -1,27 +1,35 @@
 "use client";
 
 import {
+  createTimer,
   describeError,
   summarizeThread,
+  warmUpProvider,
   ThreadFetchError,
   type ParsedThread,
   type ProviderSettings,
   type ThreadSummary,
 } from "@rts/core";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SettingsDialog } from "./SettingsDialog";
 import { SummaryView } from "./SummaryView";
 import { ThreadForm } from "./ThreadForm";
 import { loadSettings, saveSettings } from "../lib/settings";
 
-type Phase = "idle" | "loading" | "error" | "ready";
+type Phase = "idle" | "fetching" | "summarizing" | "streaming" | "error" | "ready";
+
+const STATUS = {
+  fetching: "Fetching thread…",
+  summarizing: "Summarizing…",
+  streaming: "Writing summary…",
+} as const;
 
 export function Home() {
   const [settings, setSettings] = useState<ProviderSettings | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [statusText, setStatusText] = useState("");
+  const runRef = useRef(0);
   const [error, setError] = useState("");
   const [thread, setThread] = useState<ParsedThread | null>(null);
   const [summary, setSummary] = useState<ThreadSummary | null>(null);
@@ -40,11 +48,15 @@ export function Home() {
       return;
     }
 
-    setPhase("loading");
+    const run = ++runRef.current;
+    const live = () => runRef.current === run;
+    const timer = createTimer(process.env.NODE_ENV !== "production", "web");
+    setPhase("fetching");
     setError("");
     setThread(null);
     setSummary(null);
-    setStatusText("Fetching the thread…");
+    // Open the connection to the model provider while the server fetches the thread.
+    warmUpProvider(settings.provider);
     try {
       let response: Response;
       try {
@@ -68,21 +80,39 @@ export function Home() {
       if (!response.ok || !payload.thread) {
         throw new ThreadFetchError(payload.error || "Could not fetch that thread.", "network");
       }
+      if (!live()) return;
+      timer(`thread fetched (${payload.thread.comments.length} comments)`);
       setThread(payload.thread);
-      setStatusText("Summarizing…");
+      setPhase("summarizing");
+      let first = true;
       const next = await summarizeThread({
         thread: payload.thread,
         provider: settings.provider,
         model: settings.model,
         apiKey: settings.apiKey,
+        onUpdate: (partial) => {
+          if (!live()) return;
+          if (first) {
+            first = false;
+            timer("first text from model");
+            setPhase("streaming");
+          }
+          setSummary(partial);
+        },
       });
+      if (!live()) return;
+      timer("summary complete");
       setSummary(next);
       setPhase("ready");
     } catch (caught) {
+      if (!live()) return;
+      setSummary(null);
       setPhase("error");
       setError(describeError(caught));
     }
   }
+
+  const busy = phase === "fetching" || phase === "summarizing" || phase === "streaming";
 
   return (
     <main className="page">
@@ -100,7 +130,7 @@ export function Home() {
         </button>
       </header>
 
-      <ThreadForm busy={phase === "loading"} onSubmit={(url) => void onSubmit(url)} />
+      <ThreadForm busy={busy} onSubmit={(url) => void onSubmit(url)} />
 
       {settings ? (
         <p className="using">
@@ -110,7 +140,7 @@ export function Home() {
       ) : null}
 
       <div aria-live="polite">
-        {phase === "loading" ? <p className="muted">{statusText}</p> : null}
+        {busy ? <p className="muted">{thread ? `${STATUS[phase]} ${thread.post.title}` : STATUS[phase]}</p> : null}
         {phase === "error" ? (
           <p className="error" role="alert">
             {error}
@@ -118,12 +148,13 @@ export function Home() {
         ) : null}
       </div>
 
-      {summary && thread && phase !== "loading" ? (
+      {summary && thread && (phase === "streaming" || phase === "ready") ? (
         <SummaryView
           title={thread.post.title}
           subreddit={thread.post.subreddit}
           permalink={thread.post.permalink}
           summary={summary}
+          streaming={phase === "streaming"}
         />
       ) : null}
 
