@@ -22,7 +22,7 @@ Open a Reddit thread, click the toolbar icon, and press Summarize in the side pa
 - Where they split, with both sides
 - Up to five of the strongest comments, each with a link that jumps to that comment
 
-You bring your own API key. Choose OpenAI, Anthropic, Google Gemini, or OpenRouter, pick a model, and paste a key. The key is stored in chrome.storage.local on your device. The summary request goes from the extension straight to that provider. The extension author never receives the key.
+You bring your own API key. Choose OpenAI, Anthropic, Google Gemini, or OpenRouter, pick a model, and paste a key. The key is stored in chrome.storage.local on your device, and so are the summaries you choose to keep in History (up to 200, local only, deletable). The summary request goes from the extension straight to that provider. The extension author never receives the key.
 
 The extension reads the thread's JSON from reddit.com. That request includes your existing Reddit cookies, the same as opening the page, so it works for threads your logged-in session can see. The extension does not read, store, or forward those cookies, and it does not post, vote, or message.
 
@@ -34,7 +34,7 @@ These match the production manifest in the release zip.
 
 | Permission or host | Why it is needed |
 | --- | --- |
-| storage | Save the chosen provider, model, and API key in chrome.storage.local on this device. |
+| storage | Save the chosen provider, model, API key, and the local summary history in chrome.storage.local on this device. |
 | sidePanel | Show the summary UI in the Chrome side panel. The toolbar icon opens it. |
 | https://www.reddit.com/*, https://reddit.com/*, https://old.reddit.com/*, https://m.reddit.com/*, https://np.reddit.com/*, https://new.reddit.com/* | Read the active tab URL when it is a Reddit page, and download that thread's `.json` when you click Summarize this tab or Summarize link (for a link you pasted, including share links that redirect on reddit.com). The request includes your Reddit cookies, as opening the page would. |
 | https://api.openai.com/* | Send the thread text and your OpenAI key directly to OpenAI, only if you choose OpenAI. |

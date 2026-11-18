@@ -53,6 +53,16 @@ Other models in the list: OpenAI `gpt-6.1-terra`, `gpt-6.2-sol`, `gpt-6.2-astra`
 
 The extension stores the key in `chrome.storage.local`. The website stores it in `localStorage` under `rts.settings.v1`. A rejected key or a rate limit is shown as its own error.
 
+## Summary history
+
+Finished summaries are saved on your device, in the extension (`chrome.storage.local`) and in the website (`localStorage`). History never leaves the browser: it is not sent to a server, a model provider or Reddit. Partial, cancelled and failed runs are not saved.
+
+- Open the **History** tab next to **Summarize**. Click an entry to read it again with no model call, open the thread, or re-summarize it.
+- Summarizing the same thread again (any reddit.com, old.reddit.com or share link for it) replaces its entry and moves it to the top, so there are no duplicates.
+- The newest 200 entries are kept; older ones are dropped.
+- Delete one entry with its **Delete** button, or **Clear all** (with a confirmation) in the History tab. Turn saving off with "Save finished summaries to history" in Settings; entries already saved stay until you delete them.
+- Clearing site data or removing the extension also deletes history.
+
 ## Local development
 
 Requirements: Node.js 22 or newer, and pnpm 10.
@@ -91,7 +101,7 @@ Do not put a model API key in Vercel. Users type their own key in the browser.
 
 ## Privacy
 
-Nothing in this project collects an account, analytics, or a copy of your key. Thread text is sent only to the provider you choose, from your browser. The website's server fetches a public thread and does not store it. The policy that the Chrome Web Store asks for is `/privacy` on the deployed site.
+Nothing in this project collects an account, analytics, a copy of your key, or your summary history (that stays in your browser). Thread text is sent only to the provider you choose, from your browser. The website's server fetches a public thread and does not store it. The policy that the Chrome Web Store asks for is `/privacy` on the deployed site.
 
 ## Placeholders
 

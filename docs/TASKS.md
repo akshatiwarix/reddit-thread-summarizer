@@ -160,3 +160,17 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Justify every permission
 - [x] Add the privacy policy URL placeholder
 - [x] Mark the finished tasks in this file
+
+## Local summary history
+
+- [x] Add history types, storage adapter interface and store (save, list, get, delete, clear) to `packages/core`
+- [x] Dedupe by Reddit post id so every URL form of one thread is one entry
+- [x] Cap at 200 entries, newest first, filter by title or subreddit
+- [x] Unit-test insert, replace-and-promote, cap, delete, clear, ordering, search, www vs old, different threads
+- [x] Extension: `chrome.storage.local` adapter, History tab, save on success only
+- [x] Extension: open saved summary, Open thread, Re-summarize, delete one, clear all with confirm, empty states
+- [x] Web: `localStorage` adapter, History tab, save on success only, quota error message
+- [x] Web: open saved summary, Open thread, Re-summarize, delete one, clear all with confirm, empty states
+- [x] History on/off toggle (default on) in both settings screens
+- [x] Update README, privacy page, PERMISSIONS.md and store listing
+- [x] Rebuild the unpacked extension

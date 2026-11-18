@@ -23,6 +23,13 @@ Summarize any Reddit thread into something you can read in 30 seconds. Ships as 
 - **Output cap and reasoning.** 4,096 output tokens on every provider (`max_completion_tokens` for OpenAI reasoning models, `max_tokens` for OpenAI chat models, OpenRouter and Anthropic, `maxOutputTokens` for Gemini), with reasoning effort set to low (`reasoning_effort` OpenAI, `output_config.effort` Anthropic Claude 4.5+, `thinkingConfig.thinkingLevel` Gemini 3+, `reasoning.effort` OpenRouter). Was 16,000 for some reasoning models.
 - **Default models** (fast and cheap; verified against the official docs and OpenRouter's model list on 2026-11-18): OpenAI `gpt-6-luna`, Anthropic `claude-haiku-5-5`, Google `gemini-3.6-flash`, OpenRouter `openai/gpt-6-luna`. Other catalog models stay selectable and any model ID can be typed.
 - **Dev timing.** Development builds log fetch time, time to first model text and total time to the console. Production builds log nothing.
+- **Local summary history.** Both surfaces save a finished summary on the user's device. Never sent to any server, a provider or Reddit. Nothing is saved for partial, cancelled or errored runs.
+  - Storage: `chrome.storage.local` in the extension (existing `storage` permission, no new permission), `localStorage` key `rts.history.v1` in the web app (~200 entries is about 1 MB of the ~5 MB quota; a failed write shows a message and keeps the existing entries).
+  - Entry: id, canonical thread URL, title, subreddit, provider, model, createdAt, full parsed summary (best comments with links).
+  - One entry per thread. The key is the Reddit post id, so reddit.com, www, old, m, np, new, `redd.it` and comment-permalink links with tracking params are the same thread. Re-summarizing replaces the entry and moves it to the top. Newest 200 kept, oldest dropped.
+  - Shared logic (types, adapter interface, save/list/get/delete/clear, dedupe, cap, title/subreddit filter, relative time) lives in `packages/core/src/history`; each app supplies its own storage adapter. Core imports no browser API.
+  - UI: a History tab next to Summarize in the side panel and on the web page. Newest first, title, subreddit, relative date, title search, open a saved summary with no model call, Open thread (new tab), Re-summarize, delete one, clear all (inline confirm), empty and no-match states.
+  - Settings toggle "Save finished summaries to history", default on, stored beside the other settings (`historyEnabled` in the extension, `rts.historyEnabled.v1` on the web). Off means no new entries; existing ones stay until deleted.
 - **Distribution.**
   - GitHub release `v1.0.0` with the extension zip and "load unpacked" steps in the README.
   - Chrome Web Store submission today (needs the $5 developer account, and Akshat submits).
@@ -37,9 +44,13 @@ Summarize any Reddit thread into something you can read in 30 seconds. Ships as 
 - Gemini default: `gemini-3.6-flash` (kept) or `gemini-3.8-flash`? The docs list both as stable Flash; `gemini-3.5-flash-lite` is cheaper but is Flash-Lite.
 - Request shapes for streaming, `reasoning_effort`, `output_config.effort`, `thinkingLevel` and OpenRouter's `reasoning` are taken from the docs but have not been run against live keys.
 
+- History export/import and cross-device sync are not built. Wanted?
+- History stores full summaries only, not the thread text. Is a stale summary after a thread changes fine? Re-summarize is the refresh.
+- Clearing browser data or uninstalling the extension deletes history; incognito/private windows may not persist web history.
+
 ## Out of scope for v1
 
-Accounts, a hosted AI key, saved history, sentiment charts, follow-up chat, and browsers other than Chrome.
+Accounts, a hosted AI key, synced or server-side history (history is local only), sentiment charts, follow-up chat, and browsers other than Chrome.
 
 ## Done means
 

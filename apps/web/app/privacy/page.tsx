@@ -14,8 +14,8 @@ export default function PrivacyPage() {
       </p>
       <h1>Privacy</h1>
       <p className="lede">
-        The extension and the website do not collect an account, a profile, or analytics. An API key stays in your
-        browser. This page is the privacy policy for the Chrome Web Store listing.
+        The extension and the website do not collect an account, a profile, or analytics. An API key and your summary
+        history stay in your browser. This page is the privacy policy for the Chrome Web Store listing.
       </p>
 
       <h2>The extension</h2>
@@ -38,6 +38,16 @@ export default function PrivacyPage() {
       <p>
         The key, provider, and model are stored in <code>localStorage</code> in your browser. The summary call goes
         from your browser straight to OpenAI, Anthropic, Google Gemini, or OpenRouter, depending on what you picked.
+      </p>
+
+      <h2>Summary history</h2>
+      <p>
+        When a summary finishes, the extension and the website can save it on your device so you can read it again:
+        the thread link, title, subreddit, provider, model, time, and the summary text with its best-comment links.
+        In the extension this is <code>chrome.storage.local</code>. On the website it is <code>localStorage</code> in
+        your browser. History is never sent to a server, to a model provider, or to Reddit, and it is not part of any
+        request. The newest 200 summaries are kept. You can delete one summary or clear everything from the History
+        tab, turn saving off in settings, or remove it all by clearing site data or uninstalling the extension.
       </p>
 
       <h2>What is sent to a model provider</h2>
