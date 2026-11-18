@@ -102,4 +102,60 @@ describe("fetchRedditThread", () => {
       kind: "invalid_url",
     });
   });
+
+  it("resolves a share link to the canonical thread before fetching JSON", async () => {
+    const calls: string[] = [];
+    const thread = await fetchRedditThread({
+      url: "https://www.reddit.com/r/example/s/AbCdEf1234",
+      fetchImpl: async (input) => {
+        const url = String(input);
+        calls.push(url);
+        if (url.includes("/s/")) {
+          const response = new Response("<html></html>", { status: 200 });
+          Object.defineProperty(response, "url", { value: `${THREAD_URL}?share_id=x` });
+          return response;
+        }
+        return jsonResponse(payload);
+      },
+    });
+    expect(thread.post.id).toBe("abc123");
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toContain("www.reddit.com/r/example/comments/abc123.json");
+  });
+
+  it("fails clearly when a share link does not land on a thread", async () => {
+    await expect(
+      fetchRedditThread({
+        url: "https://www.reddit.com/r/example/s/AbCdEf1234",
+        fetchImpl: async () => {
+          const response = new Response("", { status: 200 });
+          Object.defineProperty(response, "url", { value: "https://www.reddit.com/login/" });
+          return response;
+        },
+      }),
+    ).rejects.toMatchObject({ kind: "invalid_url" });
+  });
+
+  it("reports a network failure while resolving a share link", async () => {
+    await expect(
+      fetchRedditThread({
+        url: "https://www.reddit.com/r/example/s/AbCdEf1234",
+        fetchImpl: async () => {
+          throw new TypeError("fetch failed");
+        },
+      }),
+    ).rejects.toMatchObject({ kind: "network" });
+  });
+
+  it("fetches a redd.it short link as a thread", async () => {
+    const calls: string[] = [];
+    await fetchRedditThread({
+      url: "https://redd.it/abc123",
+      fetchImpl: async (input) => {
+        calls.push(String(input));
+        return jsonResponse(payload);
+      },
+    });
+    expect(calls).toEqual(["https://www.reddit.com/comments/abc123.json?limit=500&raw_json=1&sort=top"]);
+  });
 });

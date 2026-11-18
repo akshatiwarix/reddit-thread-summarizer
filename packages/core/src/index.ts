@@ -15,7 +15,7 @@ export type {
 export { absolutePermalink } from "./permalink";
 export { describeError } from "./describe-error";
 
-export { parseThreadUrl } from "./reddit/url";
+export { isShareLink, parseThreadUrl } from "./reddit/url";
 export { RedditParseError } from "./reddit/errors";
 export { parseThreadListing, MAX_COMMENTS } from "./reddit/parse";
 export { DEFAULT_MAX_CHARS, DEFAULT_MAX_COMMENT_CHARS, DEFAULT_MAX_POST_CHARS, trimThread } from "./reddit/trim";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseThreadUrl } from "../src/reddit/url";
+import { isShareLink, parseThreadUrl } from "../src/reddit/url";
 
 const QUERY = "limit=500&raw_json=1&sort=top";
 
@@ -41,9 +41,26 @@ describe("parseThreadUrl", () => {
     expect(parseThreadUrl("https://www.reddit.com/user/foo")).toBeNull();
     expect(parseThreadUrl("https://www.reddit.com/r/foo/comments")).toBeNull();
     expect(parseThreadUrl("https://example.com/r/foo/comments/abc123/title")).toBeNull();
-    expect(parseThreadUrl("https://redd.it/abc123")).toBeNull();
+    expect(parseThreadUrl("https://redd.it/")).toBeNull();
+    expect(parseThreadUrl("https://i.redd.it/abc123")).toBeNull();
     expect(parseThreadUrl("not a url")).toBeNull();
     expect(parseThreadUrl("   ")).toBeNull();
     expect(parseThreadUrl(`https://www.reddit.com/${"a".repeat(2000)}`)).toBeNull();
+  });
+
+  it("accepts a redd.it short link as a post", () => {
+    const ref = parseThreadUrl("https://redd.it/AbC123");
+    expect(ref?.postId).toBe("abc123");
+    expect(ref?.jsonUrl).toBe(`https://www.reddit.com/comments/abc123.json?${QUERY}`);
+  });
+});
+
+describe("isShareLink", () => {
+  it("detects /r/<sub>/s/<id> share links only", () => {
+    expect(isShareLink("https://www.reddit.com/r/example/s/AbCdEf1234")).toBe(true);
+    expect(isShareLink("https://reddit.com/r/example/s/AbCdEf1234/?utm_source=share")).toBe(true);
+    expect(isShareLink("https://www.reddit.com/r/example/comments/abc123/title/")).toBe(false);
+    expect(isShareLink("https://example.com/r/example/s/AbCdEf1234")).toBe(false);
+    expect(isShareLink("nope")).toBe(false);
   });
 });

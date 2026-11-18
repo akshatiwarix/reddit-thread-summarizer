@@ -1,7 +1,7 @@
 import { parseThreadListing } from "./parse";
 import { RedditParseError } from "./errors";
 import { ThreadFetchError } from "./fetch-error";
-import { parseThreadUrl } from "./url";
+import { isShareLink, parseThreadUrl } from "./url";
 import type { ParsedThread } from "../types";
 
 export const REDDIT_USER_AGENT = "web:reddit-thread-summarizer:1.0.0 (by /u/reddit-thread-summarizer)";
@@ -134,8 +134,34 @@ async function fetchOauthThread(fetchImpl: typeof fetch, url: string, token: str
   }
 }
 
+/** Follow a share link's redirect and return the canonical thread URL it lands on. */
+export async function resolveShareLink(fetchImpl: typeof fetch, url: string, userAgent: string): Promise<string> {
+  const failure = new ThreadFetchError(
+    "Could not resolve that Reddit share link. Open it in your browser and paste the thread URL instead.",
+    "invalid_url",
+  );
+  let response: Response;
+  try {
+    response = await fetchImpl(url.trim(), {
+      redirect: "follow",
+      headers: { "User-Agent": userAgent },
+      cache: "no-store",
+      signal: AbortSignal.timeout(30_000),
+    });
+  } catch {
+    throw new ThreadFetchError("Could not reach Reddit to resolve that share link.", "network");
+  }
+  await response.body?.cancel().catch(() => undefined);
+  if (response.status === 404) throw new ThreadFetchError("Reddit could not find that thread.", "not_found");
+  if (!response.url || !parseThreadUrl(response.url)) throw failure;
+  return response.url;
+}
+
 export async function fetchRedditThread(options: FetchThreadOptions): Promise<ParsedThread> {
-  const ref = parseThreadUrl(options.url);
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const userAgent = options.userAgent ?? REDDIT_USER_AGENT;
+  const pageUrl = isShareLink(options.url) ? await resolveShareLink(fetchImpl, options.url, userAgent) : options.url;
+  const ref = parseThreadUrl(pageUrl);
   if (!ref) {
     throw new ThreadFetchError(
       "Paste a full reddit.com thread URL, like https://www.reddit.com/r/example/comments/abc123/title/.",
@@ -143,8 +169,6 @@ export async function fetchRedditThread(options: FetchThreadOptions): Promise<Pa
     );
   }
 
-  const fetchImpl = options.fetchImpl ?? fetch;
-  const userAgent = options.userAgent ?? REDDIT_USER_AGENT;
   const publicResult = await fetchPublic(fetchImpl, ref.jsonUrl, userAgent);
   if (publicResult.ok) return publicResult.thread;
 
