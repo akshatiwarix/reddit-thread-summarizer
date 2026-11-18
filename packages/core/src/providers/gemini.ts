@@ -6,12 +6,11 @@ import type { ChatSettings } from "./openai";
 
 export function buildGeminiRequest(settings: ChatSettings, system: string, user: string) {
   const model = encodeURIComponent(settings.model);
-  const key = encodeURIComponent(settings.apiKey);
   return {
-    url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+    url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     init: {
       method: "POST" as const,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": settings.apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: "user", parts: [{ text: user }] }],

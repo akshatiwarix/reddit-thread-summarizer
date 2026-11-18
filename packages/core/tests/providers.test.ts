@@ -96,10 +96,11 @@ describe("provider requests", () => {
     expect(request.init.headers["x-api-key"]).toBe("test-key");
   });
 
-  it("puts the Gemini key in the query string and not in a logged header", () => {
+  it("sends the Gemini key in a header and never in the URL", () => {
     const request = buildGeminiRequest(settings, "system", "user");
-    expect(request.url).toContain("/models/test-model:generateContent?key=test-key");
-    expect(request.init.headers.Authorization).toBeUndefined();
+    expect(request.url).toBe("https://generativelanguage.googleapis.com/v1beta/models/test-model:generateContent");
+    expect(request.url).not.toContain("test-key");
+    expect(request.init.headers["x-goog-api-key"]).toBe("test-key");
   });
 
   it("names the app on OpenRouter requests", () => {
