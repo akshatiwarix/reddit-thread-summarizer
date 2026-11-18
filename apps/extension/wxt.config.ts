@@ -27,7 +27,7 @@ export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
     name: "Reddit Thread Summarizer",
-    description: "Summarize the Reddit thread open in the current tab.",
+    description: "Summarize the Reddit thread in the current tab, or any Reddit post link you paste.",
     version: "1.0.0",
     permissions: ["storage"],
     host_permissions: [...REDDIT_HOSTS, ...PROVIDER_HOSTS],

@@ -14,7 +14,9 @@ Shows the summary UI in Chrome's side panel. WXT adds this permission because `s
 
 `https://www.reddit.com/*`, `https://reddit.com/*`, `https://old.reddit.com/*`, `https://m.reddit.com/*`, `https://np.reddit.com/*`, and `https://new.reddit.com/*`.
 
-Chrome only reveals a tab URL to an extension that has a host permission for that URL. The panel reads the active tab URL to decide whether a thread is open. When you click Summarize, the extension fetches that thread's public `.json` from `www.reddit.com`, with cookies included so the request matches the Reddit session in the tab. It does not inject a script into the page.
+Pasted links use the same hosts and no new permission. A `redd.it/<id>` short link is turned into `www.reddit.com/comments/<id>` by the shared parser, so `redd.it` itself is never requested and has no host permission. A `/r/<sub>/s/<id>` share link is fetched on `www.reddit.com` (or whichever Reddit host was pasted), and Reddit's redirect lands on `www.reddit.com`, which is already covered.
+
+Chrome only reveals a tab URL to an extension that has a host permission for that URL. Opening a best-comment link calls `tabs.create` or `tabs.update`, which need no permission. The panel reads the active tab URL to decide whether a thread is open. When you click Summarize this tab or Summarize link, the extension fetches that thread's public `.json` from `www.reddit.com`, with cookies included so the request matches the Reddit session in the tab. It does not inject a script into the page.
 
 ## Hosts on the model providers
 

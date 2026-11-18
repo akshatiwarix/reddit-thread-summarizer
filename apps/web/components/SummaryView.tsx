@@ -5,9 +5,11 @@ type Props = {
   subreddit: string;
   permalink: string;
   summary: ThreadSummary;
+  /** True while text is still arriving: show sections as they fill instead of "nothing found" notes. */
+  streaming?: boolean;
 };
 
-export function SummaryView({ title, subreddit, permalink, summary }: Props) {
+export function SummaryView({ title, subreddit, permalink, summary, streaming = false }: Props) {
   return (
     <article className="summary">
       <p className="eyebrow">{subreddit ? `r/${subreddit}` : "Reddit"}</p>
@@ -16,12 +18,15 @@ export function SummaryView({ title, subreddit, permalink, summary }: Props) {
           {title}
         </a>
       </h2>
-      <section>
-        <h3>TL;DR</h3>
-        <p>{summary.tldr}</p>
-      </section>
-      <BulletSection title="Main points" items={summary.mainPoints} empty="No separate points stood out." />
-      <BulletSection title="Where people agree" items={summary.agreements} empty="No broad agreement stood out." />
+      {summary.tldr || !streaming ? (
+        <section>
+          <h3>TL;DR</h3>
+          <p>{summary.tldr}</p>
+        </section>
+      ) : null}
+      <BulletSection title="Main points" items={summary.mainPoints} empty="No separate points stood out." streaming={streaming} />
+      <BulletSection title="Where people agree" items={summary.agreements} empty="No broad agreement stood out." streaming={streaming} />
+      {summary.disagreements.length > 0 || !streaming ? (
       <section>
         <h3>Where people split</h3>
         {summary.disagreements.length === 0 ? <p className="muted">No clear split in the comments.</p> : null}
@@ -38,6 +43,8 @@ export function SummaryView({ title, subreddit, permalink, summary }: Props) {
           </div>
         ))}
       </section>
+      ) : null}
+      {summary.bestComments.length > 0 || !streaming ? (
       <section>
         <h3>Best comments</h3>
         {summary.bestComments.length === 0 ? <p className="muted">No comments were selected.</p> : null}
@@ -55,11 +62,23 @@ export function SummaryView({ title, subreddit, permalink, summary }: Props) {
           ))}
         </ol>
       </section>
+      ) : null}
     </article>
   );
 }
 
-function BulletSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
+function BulletSection({
+  title,
+  items,
+  empty,
+  streaming,
+}: {
+  title: string;
+  items: string[];
+  empty: string;
+  streaming: boolean;
+}) {
+  if (streaming && items.length === 0) return null;
   return (
     <section>
       <h3>{title}</h3>
