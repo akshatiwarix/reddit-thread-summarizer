@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { threadToPromptText } from "../src/reddit/prompt-text";
-import { trimThread } from "../src/reddit/trim";
+import { DEFAULT_MAX_CHARS, trimThread } from "../src/reddit/trim";
 import type { ParsedThread, RedditComment } from "../src/types";
 
 function comment(id: string, score: number, body: string): RedditComment {
@@ -77,5 +77,11 @@ describe("trimThread", () => {
     expect(trimmed.post.selftext.length).toBeGreaterThan(0);
     expect(trimmed.truncated).toBe(true);
     expect(trimmed.omittedComments).toBe(1);
+  });
+});
+
+describe("default caps", () => {
+  it("uses a 40k character budget", () => {
+    expect(DEFAULT_MAX_CHARS).toBe(40_000);
   });
 });

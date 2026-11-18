@@ -71,7 +71,7 @@ describe("parseThreadListing", () => {
     expect(comments.map((comment) => comment.id)).toEqual(["kept"]);
   });
 
-  it("keeps the top 200 comments by score", () => {
+  it("keeps the top 120 comments by score", () => {
     const comments = Array.from({ length: 210 }, (_, index) =>
       commentChild({
         id: `c${index}`,
@@ -82,9 +82,9 @@ describe("parseThreadListing", () => {
       }),
     );
     const thread = parseThreadListing(threadPayload(comments));
-    expect(thread.comments).toHaveLength(200);
+    expect(thread.comments).toHaveLength(120);
     expect(thread.comments[0]?.score).toBe(209);
-    expect(thread.comments[199]?.score).toBe(10);
+    expect(thread.comments[119]?.score).toBe(90);
     expect(thread.comments.some((comment) => comment.id === "c0")).toBe(false);
   });
 

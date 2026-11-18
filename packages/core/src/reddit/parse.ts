@@ -3,7 +3,7 @@ import type { ParsedThread, RedditComment, RedditPost } from "../types";
 import { decodeRedditText } from "./decode";
 import { RedditParseError } from "./errors";
 
-export const MAX_COMMENTS = 200;
+export const MAX_COMMENTS = 120;
 
 const SKIPPED_BODIES = new Set(["", "[deleted]", "[removed]"]);
 

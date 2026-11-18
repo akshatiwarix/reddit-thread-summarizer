@@ -19,7 +19,7 @@ describe("provider settings", () => {
   });
 
   it("resets a catalog model when the provider changes and keeps a custom one", () => {
-    expect(modelForProvider("gpt-6-luna", "openai", "anthropic")).toBe("claude-sonnet-5-5");
+    expect(modelForProvider("gpt-6-luna", "openai", "anthropic")).toBe("claude-haiku-5-5");
     expect(modelForProvider("my-fine-tune", "openai", "anthropic")).toBe("my-fine-tune");
   });
 });

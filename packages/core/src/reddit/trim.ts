@@ -1,8 +1,8 @@
 import type { ParsedThread, TrimmedThread } from "../types";
 import { threadToPromptText } from "./prompt-text";
 
-/** About 15k tokens for a small model, measured on the serialized prompt. */
-export const DEFAULT_MAX_CHARS = 60_000;
+/** About 10k tokens, measured on the serialized prompt. Smaller input means a faster first token. */
+export const DEFAULT_MAX_CHARS = 40_000;
 export const DEFAULT_MAX_COMMENT_CHARS = 1_500;
 export const DEFAULT_MAX_POST_CHARS = 12_000;
 
