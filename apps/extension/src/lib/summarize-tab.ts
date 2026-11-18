@@ -3,6 +3,7 @@ import {
   parseThreadListing,
   parseThreadUrl,
   summarizeThread,
+  ThreadFetchError,
   type ParsedThread,
   type ProviderSettings,
   type ThreadSummary,
@@ -12,10 +13,15 @@ export async function fetchThreadListing(pageUrl: string): Promise<ParsedThread>
   const jsonUrl = parseThreadUrl(pageUrl)?.jsonUrl;
   if (!jsonUrl) throw new Error("Open a Reddit thread first.");
 
-  const response = await fetch(jsonUrl, {
-    credentials: "include",
-    headers: { Accept: "application/json" },
-  });
+  let response: Response;
+  try {
+    response = await fetch(jsonUrl, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+  } catch {
+    throw new ThreadFetchError("Could not reach Reddit. Check the connection and try again.", "network");
+  }
 
   if (response.status === 404) throw new Error("Reddit could not find that thread.");
   if (response.status === 429) throw new Error("Reddit rate limited the thread request. Wait a moment and try again.");
