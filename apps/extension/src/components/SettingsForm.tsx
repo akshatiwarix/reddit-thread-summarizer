@@ -3,11 +3,13 @@ import { useState, type FormEvent } from "react";
 
 type Props = {
   initial: ProviderSettings;
-  onSave: (settings: ProviderSettings) => Promise<void>;
+  initialHistoryEnabled: boolean;
+  onSave: (settings: ProviderSettings, historyEnabled: boolean) => Promise<void>;
 };
 
-export function SettingsForm({ initial, onSave }: Props) {
+export function SettingsForm({ initial, initialHistoryEnabled, onSave }: Props) {
   const [settings, setSettings] = useState(initial);
+  const [historyEnabled, setHistoryEnabled] = useState(initialHistoryEnabled);
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -26,7 +28,7 @@ export function SettingsForm({ initial, onSave }: Props) {
     event.preventDefault();
     setSaving(true);
     try {
-      await onSave(settings);
+      await onSave(settings, historyEnabled);
       setSaved(true);
     } finally {
       setSaving(false);
@@ -90,6 +92,17 @@ export function SettingsForm({ initial, onSave }: Props) {
           Get a key
         </a>
       </p>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={historyEnabled}
+          onChange={(event) => {
+            setSaved(false);
+            setHistoryEnabled(event.target.checked);
+          }}
+        />
+        Save finished summaries to history on this device
+      </label>
       <div className="row">
         <button type="submit" disabled={saving}>
           {saving ? "Saving…" : "Save settings"}

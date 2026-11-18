@@ -41,7 +41,7 @@ export async function summarizeRedditUrl(
   settings: ProviderSettings,
   signal: AbortSignal,
   callbacks: RunCallbacks,
-): Promise<{ title: string; summary: ThreadSummary }> {
+): Promise<{ title: string; subreddit: string; url: string; summary: ThreadSummary }> {
   const timer = createTimer(import.meta.env.DEV, "extension");
   callbacks.onStage("fetching");
   // Open the connection to the model provider while Reddit is still downloading.
@@ -85,7 +85,13 @@ export async function summarizeRedditUrl(
     },
   });
   timer("summary complete");
-  return { title: thread.post.title, summary };
+  return {
+    title: thread.post.title,
+    subreddit: thread.post.subreddit,
+    // The post's own permalink, so a redd.it or share link is saved under its real thread URL.
+    url: absolutePermalink(thread.post.permalink),
+    summary,
+  };
 }
 
 /** A comment from the current tab's thread replaces that tab. A pasted link's comment opens in a new tab. */

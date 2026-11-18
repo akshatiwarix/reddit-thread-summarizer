@@ -55,7 +55,7 @@ export function historyIdForUrl(url: string): string | null {
   return parseThreadUrl(url)?.postId ?? null;
 }
 
-export function createHistoryStore(storage: HistoryStorage, now: () => number = Date.now): HistoryStore {
+export function createHistoryStore(adapter: HistoryStorage, now: () => number = Date.now): HistoryStore {
   // Every call reads, changes and writes the whole list. Run them one at a time so two quick calls cannot overwrite each other.
   let tail: Promise<unknown> = Promise.resolve();
   function serial<T>(task: () => Promise<T>): Promise<T> {
@@ -65,7 +65,7 @@ export function createHistoryStore(storage: HistoryStorage, now: () => number = 
   }
 
   async function load(): Promise<HistoryEntry[]> {
-    return normalizeHistory(await storage.read());
+    return normalizeHistory(await adapter.read());
   }
 
   return {
@@ -90,7 +90,7 @@ export function createHistoryStore(storage: HistoryStorage, now: () => number = 
           summary: input.summary,
         };
         const rest = (await load()).filter((existing) => existing.id !== entry.id);
-        await storage.write([entry, ...rest].slice(0, MAX_HISTORY_ENTRIES));
+        await adapter.write([entry, ...rest].slice(0, MAX_HISTORY_ENTRIES));
         return entry;
       }),
 
@@ -98,10 +98,10 @@ export function createHistoryStore(storage: HistoryStorage, now: () => number = 
       serial(async () => {
         const entries = await load();
         const next = entries.filter((entry) => entry.id !== id);
-        if (next.length !== entries.length) await storage.write(next);
+        if (next.length !== entries.length) await adapter.write(next);
       }),
 
-    clear: () => serial(() => storage.write([])),
+    clear: () => serial(() => adapter.write([])),
   };
 }
 

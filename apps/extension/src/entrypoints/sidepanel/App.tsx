@@ -1,13 +1,16 @@
 import { describeError, type ProviderSettings, type ThreadSummary } from "@rts/core";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { HistoryView } from "../../components/HistoryView";
 import { SettingsForm } from "../../components/SettingsForm";
 import { SummaryView } from "../../components/SummaryView";
 import { readActiveTab, type ActiveTab } from "../../lib/active-tab";
 import { checkRedditLink, openComment, summarizeRedditUrl, type Stage } from "../../lib/summarize-link";
+import { history, loadHistoryEnabled, saveHistoryEnabled } from "../../lib/history";
 import { loadSettings, saveSettings } from "../../lib/storage";
 
 type Phase = "idle" | Stage | "error" | "ready";
 type Source = "tab" | "link";
+type View = "summarize" | "history";
 
 const STATUS: Record<Stage, string> = {
   fetching: "Fetching thread…",
@@ -18,6 +21,9 @@ const STATUS: Record<Stage, string> = {
 export function App() {
   const [settings, setSettings] = useState<ProviderSettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [view, setView] = useState<View>("summarize");
+  const [historyEnabled, setHistoryEnabled] = useState(true);
+  const [historyNotice, setHistoryNotice] = useState("");
   const [tab, setTab] = useState<ActiveTab>({ thread: null });
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
@@ -45,6 +51,7 @@ export function App() {
     setError("");
     setPhase("idle");
     setSource(null);
+    setHistoryNotice("");
   }
 
   // A tab summary belongs to one thread. Drop it, and stop any run for it, when the active thread changes.
@@ -61,6 +68,10 @@ export function App() {
       setSettings(loaded);
       if (!loaded.apiKey) setShowSettings(true);
     });
+  }, []);
+
+  useEffect(() => {
+    void loadHistoryEnabled().then(setHistoryEnabled);
   }, []);
 
   useEffect(() => {
@@ -100,6 +111,7 @@ export function App() {
 
     setSource(kind);
     setError("");
+    setHistoryNotice("");
     setSummary(null);
     setTitle("");
     setPhase("fetching");
@@ -115,6 +127,24 @@ export function App() {
       setTitle(result.title);
       setPhase("ready");
       setShowSettings(false);
+      // Only a finished, still-current run is saved. Errors, cancels and partial streams never reach here.
+      if (historyEnabled) {
+        try {
+          await history.save({
+            url: result.url,
+            title: result.title,
+            subreddit: result.subreddit,
+            provider: settings.provider,
+            model: settings.model,
+            summary: result.summary,
+          });
+        } catch {
+          // runRef is null unless a newer run has already started; don't leave a stale notice on that one.
+          if (runRef.current === null) {
+            setHistoryNotice("The summary could not be saved to history. Browser storage may be full. Clear some history and try again.");
+          }
+        }
+      }
     } catch (caught) {
       if (!live()) return; // replaced, cancelled, or the tab moved on
       runRef.current = null;
@@ -150,6 +180,11 @@ export function App() {
     void run("link", checked.url);
   }
 
+  function onResummarize(url: string) {
+    setView("summarize");
+    void run("link", url);
+  }
+
   const busy = phase === "fetching" || phase === "summarizing" || phase === "streaming";
 
   const threadLabel = tab.thread
@@ -173,73 +208,100 @@ export function App() {
       {showSettings && settings ? (
         <SettingsForm
           initial={settings}
-          onSave={async (next) => {
+          initialHistoryEnabled={historyEnabled}
+          onSave={async (next, nextHistoryEnabled) => {
             await saveSettings(next);
+            await saveHistoryEnabled(nextHistoryEnabled);
             setSettings({ ...next, apiKey: next.apiKey.trim(), model: next.model.trim() });
+            setHistoryEnabled(nextHistoryEnabled);
           }}
         />
       ) : null}
 
-      <div className="actions">
-        <button type="button" className="primary" disabled={busy} onClick={onSummarizeTab}>
-          Summarize this tab
+      <div className="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={view === "summarize"} onClick={() => setView("summarize")}>
+          Summarize
         </button>
-        {busy ? (
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              cancelRun();
-              clearResult();
-            }}
-          >
-            Cancel
-          </button>
-        ) : null}
-        {settings ? (
-          <p className="using">
-            {settings.provider} · {settings.model}
-            {settings.apiKey ? "" : " · no key yet"}
-          </p>
-        ) : null}
+        <button type="button" role="tab" aria-selected={view === "history"} onClick={() => setView("history")}>
+          History
+        </button>
       </div>
 
-      <form className="link-form" onSubmit={onSubmitLink}>
-        <input
-          type="text"
-          aria-label="Reddit post link"
-          placeholder="Or paste a Reddit post link…"
-          value={link}
-          disabled={busy}
-          onChange={(event) => {
-            setLink(event.target.value);
-            if (phase === "error" && source === "link") setError("");
-          }}
-        />
-        <button type="submit" disabled={busy || !link.trim()}>
-          Summarize link
-        </button>
-      </form>
+      {view === "history" ? (
+        <>
+          {busy ? <p className="muted">{STATUS[phase]} It will appear in the Summarize tab.</p> : null}
+          <HistoryView onResummarize={onResummarize} resummarizeDisabled={busy} />
+        </>
+      ) : (
+        <>
+          <div className="actions">
+            <button type="button" className="primary" disabled={busy} onClick={onSummarizeTab}>
+              Summarize this tab
+            </button>
+            {busy ? (
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  cancelRun();
+                  clearResult();
+                }}
+              >
+                Cancel
+              </button>
+            ) : null}
+            {settings ? (
+              <p className="using">
+                {settings.provider} · {settings.model}
+                {settings.apiKey ? "" : " · no key yet"}
+              </p>
+            ) : null}
+          </div>
 
-      <div aria-live="polite">
-        {phase === "error" && error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {busy ? <p className="muted">{title ? `${STATUS[phase]} ${title}` : STATUS[phase]}</p> : null}
-      </div>
+          <form className="link-form" onSubmit={onSubmitLink}>
+            <input
+              type="text"
+              aria-label="Reddit post link"
+              placeholder="Or paste a Reddit post link…"
+              value={link}
+              disabled={busy}
+              onChange={(event) => {
+                setLink(event.target.value);
+                if (phase === "error" && source === "link") setError("");
+              }}
+            />
+            <button type="submit" disabled={busy || !link.trim()}>
+              Summarize link
+            </button>
+          </form>
 
-      {summary && (phase === "streaming" || phase === "ready") ? (
-        <SummaryView
-          title={title}
-          summary={summary}
-          streaming={phase === "streaming"}
-          onOpenComment={(permalink) => {
-            void openComment(permalink, tab.id, source === "link");
-          }}
-        />
-      ) : null}
+          <div aria-live="polite">
+            {phase === "error" && error ? (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            {busy ? <p className="muted">{title ? `${STATUS[phase]} ${title}` : STATUS[phase]}</p> : null}
+          </div>
+
+          {historyNotice ? (
+            <p className="error" role="status">
+              {historyNotice}
+            </p>
+          ) : null}
+
+          {summary && (phase === "streaming" || phase === "ready") ? (
+            <SummaryView
+              title={title}
+              summary={summary}
+              streaming={phase === "streaming"}
+              onOpenComment={(permalink) => {
+                void openComment(permalink, tab.id, source === "link");
+              }}
+            />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

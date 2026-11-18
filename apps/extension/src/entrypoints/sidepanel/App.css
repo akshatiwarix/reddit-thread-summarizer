@@ -132,3 +132,44 @@ a { color: var(--accent); }
 }
 
 .link-form input { flex: 1; min-width: 0; }
+
+.tabs { display: flex; gap: 0.4rem; margin-top: 0.7rem; }
+
+.tabs button { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--accent-ink); }
+
+.button-link {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  text-decoration: none;
+}
+
+.history-list { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+
+.history-list li { display: flex; gap: 0.4rem; align-items: stretch; }
+
+.history-item {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+  text-align: left;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.history-title { font-family: var(--serif); overflow-wrap: anywhere; }
+
+.history-foot { margin-top: 0.7rem; flex-wrap: wrap; }
+
+button.danger { background: var(--danger); }
+
+.empty { margin-top: 0.8rem; }
+
+label.check { display: flex; align-items: center; gap: 0.5rem; }
+
+label.check input { width: auto; }
