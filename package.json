@@ -8,9 +8,8 @@
   "scripts": {
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "build": "pnpm --filter @rts/core build && pnpm -r --if-present build",
+    "build": "pnpm --filter @rts/core build && pnpm --filter @rts/extension build",
     "package:extension": "node scripts/package-extension.mjs",
-    "dev:web": "pnpm --filter @rts/web dev",
     "dev:extension": "pnpm --filter @rts/extension dev"
   }
 }
