@@ -1,5 +1,4 @@
 import {
-  defaultSettings,
   modelForProvider,
   PROVIDERS,
   providerInfo,
@@ -48,7 +47,7 @@ export function SettingsDialog({ open, initial, onClose, onSave }: Props) {
     event.preventDefault();
     onSave({
       provider: settings.provider,
-      model: settings.model.trim() || defaultSettings().model,
+      model: settings.model.trim() || info.defaultModel,
       apiKey: settings.apiKey.trim(),
     });
     onClose();
