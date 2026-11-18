@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  absolutePermalink,
   createTimer,
   describeError,
   summarizeThread,
@@ -12,11 +13,14 @@ import {
 } from "@rts/core";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { HistoryView } from "./HistoryView";
 import { SettingsDialog } from "./SettingsDialog";
 import { SummaryView } from "./SummaryView";
 import { ThreadForm } from "./ThreadForm";
+import { history, loadHistoryEnabled, saveHistoryEnabled } from "../lib/history";
 import { loadSettings, saveSettings } from "../lib/settings";
 
+type View = "summarize" | "history";
 type Phase = "idle" | "fetching" | "summarizing" | "streaming" | "error" | "ready";
 
 const STATUS = {
@@ -28,6 +32,9 @@ const STATUS = {
 export function Home() {
   const [settings, setSettings] = useState<ProviderSettings | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [view, setView] = useState<View>("summarize");
+  const [historyEnabled, setHistoryEnabled] = useState(true);
+  const [historyNotice, setHistoryNotice] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const runRef = useRef(0);
   const [error, setError] = useState("");
@@ -37,6 +44,7 @@ export function Home() {
   useEffect(() => {
     const loaded = loadSettings();
     setSettings(loaded);
+    setHistoryEnabled(loadHistoryEnabled());
     if (!loaded.apiKey) setDialogOpen(true);
   }, []);
 
@@ -53,6 +61,7 @@ export function Home() {
     const timer = createTimer(process.env.NODE_ENV !== "production", "web");
     setPhase("fetching");
     setError("");
+    setHistoryNotice("");
     setThread(null);
     setSummary(null);
     // Open the connection to the model provider while the server fetches the thread.
@@ -104,12 +113,36 @@ export function Home() {
       timer("summary complete");
       setSummary(next);
       setPhase("ready");
+      // Only a finished, still-current run is saved. Errors and replaced runs never reach here.
+      if (historyEnabled) {
+        try {
+          await history.save({
+            url: absolutePermalink(payload.thread.post.permalink),
+            title: payload.thread.post.title,
+            subreddit: payload.thread.post.subreddit,
+            provider: settings.provider,
+            model: settings.model,
+            summary: next,
+          });
+        } catch {
+          if (live()) {
+            setHistoryNotice(
+              "The summary could not be saved to history. Browser storage may be full or blocked. Delete some history and try again.",
+            );
+          }
+        }
+      }
     } catch (caught) {
       if (!live()) return;
       setSummary(null);
       setPhase("error");
       setError(describeError(caught));
     }
+  }
+
+  function onResummarize(url: string) {
+    setView("summarize");
+    void onSubmit(url);
   }
 
   const busy = phase === "fetching" || phase === "summarizing" || phase === "streaming";
@@ -130,47 +163,74 @@ export function Home() {
         </button>
       </header>
 
-      <ThreadForm busy={busy} onSubmit={(url) => void onSubmit(url)} />
+      <div className="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={view === "summarize"} onClick={() => setView("summarize")}>
+          Summarize
+        </button>
+        <button type="button" role="tab" aria-selected={view === "history"} onClick={() => setView("history")}>
+          History
+        </button>
+      </div>
 
-      {settings ? (
-        <p className="using">
-          Using {settings.provider} · {settings.model}
-          {settings.apiKey ? "" : " · no key yet"}
-        </p>
+      {view === "history" ? (
+        <>
+          {busy ? <p className="muted">{STATUS[phase]} It will appear in the Summarize tab.</p> : null}
+          <HistoryView onResummarize={onResummarize} resummarizeDisabled={busy} />
+        </>
       ) : null}
 
-      <div aria-live="polite">
-        {busy ? <p className="muted">{thread ? `${STATUS[phase]} ${thread.post.title}` : STATUS[phase]}</p> : null}
-        {phase === "error" ? (
-          <p className="error" role="alert">
-            {error}
+      {/* Kept mounted (just hidden) so a half-typed URL survives a trip to History. */}
+      <div hidden={view !== "summarize"}>
+        <ThreadForm busy={busy} onSubmit={(url) => void onSubmit(url)} />
+
+        {settings ? (
+          <p className="using">
+            Using {settings.provider} · {settings.model}
+            {settings.apiKey ? "" : " · no key yet"}
+          </p>
+        ) : null}
+
+        <div aria-live="polite">
+          {busy ? <p className="muted">{thread ? `${STATUS[phase]} ${thread.post.title}` : STATUS[phase]}</p> : null}
+          {phase === "error" ? (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
+
+        {summary && thread && (phase === "streaming" || phase === "ready") ? (
+          <SummaryView
+            title={thread.post.title}
+            subreddit={thread.post.subreddit}
+            permalink={thread.post.permalink}
+            summary={summary}
+            streaming={phase === "streaming"}
+          />
+        ) : null}
+        {historyNotice ? (
+          <p className="error" role="status">
+            {historyNotice}
           </p>
         ) : null}
       </div>
 
-      {summary && thread && (phase === "streaming" || phase === "ready") ? (
-        <SummaryView
-          title={thread.post.title}
-          subreddit={thread.post.subreddit}
-          permalink={thread.post.permalink}
-          summary={summary}
-          streaming={phase === "streaming"}
-        />
-      ) : null}
-
       <footer className="site-footer">
         <Link href="/privacy">Privacy</Link>
-        <span>Keys stay in this browser.</span>
+        <span>Keys and history stay in this browser.</span>
       </footer>
 
       {settings ? (
         <SettingsDialog
           open={dialogOpen}
           initial={settings}
+          initialHistoryEnabled={historyEnabled}
           onClose={() => setDialogOpen(false)}
-          onSave={(next) => {
+          onSave={(next, nextHistoryEnabled) => {
             saveSettings(next);
+            saveHistoryEnabled(nextHistoryEnabled);
             setSettings(next);
+            setHistoryEnabled(nextHistoryEnabled);
           }}
         />
       ) : null}

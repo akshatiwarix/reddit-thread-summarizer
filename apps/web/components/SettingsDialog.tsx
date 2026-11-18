@@ -10,19 +10,24 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 type Props = {
   open: boolean;
   initial: ProviderSettings;
+  initialHistoryEnabled: boolean;
   onClose: () => void;
-  onSave: (settings: ProviderSettings) => void;
+  onSave: (settings: ProviderSettings, historyEnabled: boolean) => void;
 };
 
-export function SettingsDialog({ open, initial, onClose, onSave }: Props) {
+export function SettingsDialog({ open, initial, initialHistoryEnabled, onClose, onSave }: Props) {
   const titleId = useId();
   const [settings, setSettings] = useState(initial);
+  const [historyEnabled, setHistoryEnabled] = useState(initialHistoryEnabled);
   const [showKey, setShowKey] = useState(false);
   const info = providerInfo(settings.provider);
 
   useEffect(() => {
-    if (open) setSettings(initial);
-  }, [open, initial]);
+    if (open) {
+      setSettings(initial);
+      setHistoryEnabled(initialHistoryEnabled);
+    }
+  }, [open, initial, initialHistoryEnabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +54,7 @@ export function SettingsDialog({ open, initial, onClose, onSave }: Props) {
       provider: settings.provider,
       model: settings.model.trim() || info.defaultModel,
       apiKey: settings.apiKey.trim(),
-    });
+    }, historyEnabled);
     onClose();
   }
 
@@ -113,6 +118,10 @@ export function SettingsDialog({ open, initial, onClose, onSave }: Props) {
               Get a {info.label} key
             </a>
           </p>
+          <label className="check">
+            <input type="checkbox" checked={historyEnabled} onChange={(event) => setHistoryEnabled(event.target.checked)} />
+            Save finished summaries to history in this browser
+          </label>
           <div className="row">
             <button type="submit" className="primary">
               Save
