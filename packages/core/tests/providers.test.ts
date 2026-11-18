@@ -142,6 +142,41 @@ describe("summarizeThread", () => {
     ).rejects.toMatchObject({ kind: "bad_key", status: 401 });
   });
 
+  it("drops best comments the model invented, end to end", async () => {
+    const withGhost = JSON.stringify({
+      ...JSON.parse(summaryJson),
+      bestComments: [
+        { author: "ghost", excerpt: "Made up.", score: 99, permalink: "/r/example/comments/abc123/title/nope/" },
+        { author: "alice", excerpt: "Fix it first.", score: 8, permalink: "/r/example/comments/abc123/title/c1/" },
+      ],
+    });
+    const result = await summarizeThread({
+      thread,
+      provider: "openai",
+      model: "gpt-6-luna",
+      apiKey: "test-key",
+      fetchImpl: async () => jsonResponse({ choices: [{ message: { content: withGhost } }] }),
+    });
+    expect(result.bestComments.map((comment) => comment.author)).toEqual(["alice"]);
+  });
+
+  it("sends the reasoning-model body for an OpenAI model typed in by the user", async () => {
+    let body: Record<string, unknown> = {};
+    await summarizeThread({
+      thread,
+      provider: "openai",
+      model: "o3",
+      apiKey: "test-key",
+      fetchImpl: async (_input, init) => {
+        body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return jsonResponse({ choices: [{ message: { content: summaryJson } }] });
+      },
+    });
+    expect(body.model).toBe("o3");
+    expect(body).toHaveProperty("max_completion_tokens");
+    expect(body).not.toHaveProperty("temperature");
+  });
+
   it("reads Anthropic text blocks and surfaces a rate limit", async () => {
     const ok = await summarizeThread({
       thread,
