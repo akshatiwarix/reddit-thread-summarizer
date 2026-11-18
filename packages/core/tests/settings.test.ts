@@ -5,7 +5,7 @@ import { defaultSettings, modelForProvider, normalizeSettings } from "../src/pro
 describe("provider settings", () => {
   it("lists four providers and defaults to OpenAI", () => {
     expect(PROVIDERS.map((provider) => provider.id)).toEqual(["openai", "anthropic", "gemini", "openrouter"]);
-    expect(defaultSettings()).toEqual({ provider: "openai", model: "gpt-4o-mini", apiKey: "" });
+    expect(defaultSettings()).toEqual({ provider: "openai", model: "gpt-6-luna", apiKey: "" });
   });
 
   it("normalizes stored settings and ignores junk", () => {
@@ -15,11 +15,11 @@ describe("provider settings", () => {
       apiKey: "AIza-test",
     });
     expect(normalizeSettings({ provider: "nope" }).provider).toBe("openai");
-    expect(normalizeSettings(null).model).toBe("gpt-4o-mini");
+    expect(normalizeSettings(null).model).toBe("gpt-6-luna");
   });
 
   it("resets a catalog model when the provider changes and keeps a custom one", () => {
-    expect(modelForProvider("gpt-4o-mini", "openai", "anthropic")).toBe("claude-sonnet-4-5");
+    expect(modelForProvider("gpt-6-luna", "openai", "anthropic")).toBe("claude-sonnet-5-5");
     expect(modelForProvider("my-fine-tune", "openai", "anthropic")).toBe("my-fine-tune");
   });
 });

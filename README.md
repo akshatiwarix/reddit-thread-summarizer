@@ -44,10 +44,10 @@ Open Settings in the extension, or "API key" on the website. Pick a provider, a 
 
 | Provider | Where to create a key | Default model |
 | --- | --- | --- |
-| OpenAI | https://platform.openai.com/api-keys | `gpt-4o-mini` |
-| Anthropic | https://console.anthropic.com/settings/keys | `claude-sonnet-4-5` |
-| Google Gemini | https://aistudio.google.com/apikey | `gemini-2.5-flash` |
-| OpenRouter | https://openrouter.ai/keys | `openai/gpt-4o-mini` |
+| OpenAI | https://platform.openai.com/api-keys | `gpt-6-luna` |
+| Anthropic | https://console.anthropic.com/settings/keys | `claude-sonnet-5-5` |
+| Google Gemini | https://aistudio.google.com/apikey | `gemini-3.6-flash` |
+| OpenRouter | https://openrouter.ai/keys | `openai/gpt-6-luna` |
 
 The extension stores the key in `chrome.storage.local`. The website stores it in `localStorage` under `rts.settings.v1`. A rejected key or a rate limit is shown as its own error.
 
