@@ -38,3 +38,14 @@ export { defaultSettings, modelForProvider, normalizeSettings } from "./provider
 export { warmUpProvider } from "./providers/warm-up";
 export { summarizeThread } from "./providers/summarize";
 export type { SummarizeOptions } from "./providers/summarize";
+
+export {
+  MAX_HISTORY_ENTRIES,
+  createHistoryStore,
+  filterHistory,
+  formatRelativeTime,
+  historyIdForUrl,
+  normalizeHistory,
+  normalizeHistoryEnabled,
+} from "./history/history";
+export type { HistoryEntry, HistoryStorage, HistoryStore, NewHistoryEntry } from "./history/history";
