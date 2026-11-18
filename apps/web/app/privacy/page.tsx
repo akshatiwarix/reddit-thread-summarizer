@@ -21,8 +21,10 @@ export default function PrivacyPage() {
       <h2>The extension</h2>
       <p>
         The side panel reads the URL of the active tab so it can tell whether a Reddit thread is open. When you click
-        Summarize, it downloads that thread&apos;s public JSON from reddit.com and sends the text to the model provider
-        you chose. The provider, model name, and API key are stored with <code>chrome.storage.local</code> on your
+        Summarize, it downloads that thread&apos;s JSON from reddit.com and sends the text to the model provider
+        you chose. That request to reddit.com includes your existing Reddit cookies, so Reddit sees it as coming from
+        your logged-in browser, the same as when you open the page. The extension does not read, store, or forward
+        those cookies. The provider, model name, and API key are stored with <code>chrome.storage.local</code> on your
         device. They are not sent to the author of this extension.
       </p>
 

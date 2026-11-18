@@ -20,11 +20,11 @@ Open a Reddit thread, click the toolbar icon, and press Summarize in the side pa
 - The main points
 - Where commenters agree
 - Where they split, with both sides
-- Three to five of the strongest comments, each with a link that jumps to that comment
+- Up to five of the strongest comments, each with a link that jumps to that comment
 
 You bring your own API key. Choose OpenAI, Anthropic, Google Gemini, or OpenRouter, pick a model, and paste a key. The key is stored in chrome.storage.local on your device. The summary request goes from the extension straight to that provider. The extension author never receives the key.
 
-The extension reads the thread's public JSON from reddit.com. It does not post, vote, or message.
+The extension reads the thread's JSON from reddit.com. That request includes your existing Reddit cookies, the same as opening the page, so it works for threads your logged-in session can see. The extension does not read, store, or forward those cookies, and it does not post, vote, or message.
 
 There is also a website in this project where you can paste a thread URL and see the same summary. The privacy policy is on that site.
 
@@ -36,7 +36,7 @@ These match the production manifest in the release zip.
 | --- | --- |
 | storage | Save the chosen provider, model, and API key in chrome.storage.local on this device. |
 | sidePanel | Show the summary UI in the Chrome side panel. The toolbar icon opens it. |
-| https://www.reddit.com/*, https://reddit.com/*, https://old.reddit.com/*, https://m.reddit.com/*, https://np.reddit.com/*, https://new.reddit.com/* | Read the active tab URL when it is a Reddit page, and download that thread's `.json` when you click Summarize. |
+| https://www.reddit.com/*, https://reddit.com/*, https://old.reddit.com/*, https://m.reddit.com/*, https://np.reddit.com/*, https://new.reddit.com/* | Read the active tab URL when it is a Reddit page, and download that thread's `.json` when you click Summarize. The request includes your Reddit cookies, as opening the page would. |
 | https://api.openai.com/* | Send the thread text and your OpenAI key directly to OpenAI, only if you choose OpenAI. |
 | https://api.anthropic.com/* | Send the thread text and your Anthropic key directly to Anthropic, only if you choose Anthropic. |
 | https://generativelanguage.googleapis.com/* | Send the thread text and your Gemini key directly to Google, only if you choose Gemini. |
