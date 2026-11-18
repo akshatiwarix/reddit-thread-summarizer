@@ -158,4 +158,56 @@ describe("fetchRedditThread", () => {
     });
     expect(calls).toEqual(["https://www.reddit.com/comments/abc123.json?limit=500&raw_json=1&sort=top"]);
   });
+
+  it("follows the share-link redirect with the caller's cookie mode and lands on the thread, even through old.reddit", async () => {
+    const inits: Array<RequestInit | undefined> = [];
+    const calls: string[] = [];
+    const thread = await fetchRedditThread({
+      url: "https://old.reddit.com/r/example/s/AbCdEf1234",
+      requestCredentials: "include",
+      userAgent: "",
+      fetchImpl: async (input, init) => {
+        const url = String(input);
+        calls.push(url);
+        inits.push(init);
+        if (url.includes("/s/")) {
+          const response = new Response("<html></html>", { status: 200 });
+          Object.defineProperty(response, "url", { value: `${THREAD_URL}?share_id=x&utm_source=share` });
+          return response;
+        }
+        return jsonResponse(payload);
+      },
+    });
+    expect(thread.post.id).toBe("abc123");
+    expect(calls[0]).toBe("https://old.reddit.com/r/example/s/AbCdEf1234");
+    expect(inits[0]).toMatchObject({ redirect: "follow", credentials: "include" });
+    expect(inits[1]).toMatchObject({ credentials: "include" });
+    expect(new Headers(inits[0]?.headers).has("user-agent")).toBe(false);
+    expect(new Headers(inits[1]?.headers).has("user-agent")).toBe(false);
+  });
+
+  it("reports a share link that 404s as not found", async () => {
+    await expect(
+      fetchRedditThread({
+        url: "https://www.reddit.com/r/example/s/AbCdEf1234",
+        fetchImpl: async () => new Response("", { status: 404 }),
+      }),
+    ).rejects.toMatchObject({ kind: "not_found" });
+  });
+
+  it("stops when the caller aborts instead of falling back or reporting a block", async () => {
+    const controller = new AbortController();
+    controller.abort(new DOMException("stop", "AbortError"));
+    await expect(
+      fetchRedditThread({
+        url: THREAD_URL,
+        signal: controller.signal,
+        credentials: { clientId: "a", clientSecret: "b" },
+        fetchImpl: async (_input, init) => {
+          if (init?.signal?.aborted) throw new DOMException("stop", "AbortError");
+          return jsonResponse(payload);
+        },
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+  });
 });

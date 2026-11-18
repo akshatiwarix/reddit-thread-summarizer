@@ -14,6 +14,7 @@ export type {
 
 export { absolutePermalink } from "./permalink";
 export { describeError } from "./describe-error";
+export { createTimer } from "./timing";
 
 export { isShareLink, parseThreadUrl } from "./reddit/url";
 export { RedditParseError } from "./reddit/errors";
@@ -34,5 +35,6 @@ export { MAX_OUTPUT_TOKENS } from "./providers/limits";
 export { PROVIDERS, isProviderId, providerInfo } from "./providers/catalog";
 export type { ProviderInfo } from "./providers/catalog";
 export { defaultSettings, modelForProvider, normalizeSettings } from "./providers/settings";
+export { warmUpProvider } from "./providers/warm-up";
 export { summarizeThread } from "./providers/summarize";
 export type { SummarizeOptions } from "./providers/summarize";

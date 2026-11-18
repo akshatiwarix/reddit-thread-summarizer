@@ -55,12 +55,51 @@ describe("parseThreadUrl", () => {
   });
 });
 
+describe("pasted-link hosts", () => {
+  it("accepts every supported Reddit host and redd.it, with query strings, fragments and trailing slashes", () => {
+    for (const link of [
+      "https://reddit.com/r/foo/comments/abc123/title/",
+      "https://www.reddit.com/r/foo/comments/abc123/title/?utm_source=share&utm_medium=web3x",
+      "https://old.reddit.com/r/foo/comments/abc123/title/#top",
+      "https://new.reddit.com/r/foo/comments/abc123/",
+      "  https://redd.it/abc123/  ",
+      "http://redd.it/abc123?ref=x",
+      "https://www.reddit.com/comments/abc123",
+    ]) {
+      expect(parseThreadUrl(link)?.postId, link).toBe("abc123");
+    }
+  });
+
+  it("rejects look-alike hosts, other schemes and non-post redd.it paths", () => {
+    for (const link of [
+      "https://reddit.com.evil.example/r/foo/comments/abc123/title/",
+      "https://evilreddit.com/r/foo/comments/abc123/title/",
+      "https://redd.it.evil.example/abc123",
+      "https://redd.it/abc123/extra/path",
+      "ftp://www.reddit.com/r/foo/comments/abc123/title/",
+      "javascript:alert(1)",
+      "https://www.reddit.com/r/foo/s/AbCdEf1234",
+    ]) {
+      expect(parseThreadUrl(link), link).toBeNull();
+    }
+  });
+
+  it("keeps the comment id of a comment permalink", () => {
+    expect(parseThreadUrl("https://redd.it/abc123")?.commentId).toBeUndefined();
+    expect(parseThreadUrl("https://old.reddit.com/r/foo/comments/abc123/title/def456/?context=3")?.commentId).toBe("def456");
+  });
+});
+
 describe("isShareLink", () => {
   it("detects /r/<sub>/s/<id> share links only", () => {
     expect(isShareLink("https://www.reddit.com/r/example/s/AbCdEf1234")).toBe(true);
     expect(isShareLink("https://reddit.com/r/example/s/AbCdEf1234/?utm_source=share")).toBe(true);
     expect(isShareLink("https://www.reddit.com/r/example/comments/abc123/title/")).toBe(false);
     expect(isShareLink("https://example.com/r/example/s/AbCdEf1234")).toBe(false);
+    expect(isShareLink("https://old.reddit.com/r/example/s/AbCdEf1234")).toBe(true);
+    expect(isShareLink("https://new.reddit.com/r/example/s/AbCdEf1234")).toBe(true);
+    expect(isShareLink("https://redd.it/abc123")).toBe(false);
+    expect(isShareLink("https://reddit.com.evil.example/r/example/s/AbCdEf1234")).toBe(false);
     expect(isShareLink("nope")).toBe(false);
   });
 });

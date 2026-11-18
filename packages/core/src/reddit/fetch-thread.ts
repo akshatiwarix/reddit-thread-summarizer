@@ -16,8 +16,23 @@ export type FetchThreadOptions = {
   url: string;
   fetchImpl?: typeof fetch;
   credentials?: RedditCredentials;
+  /** Pass "" to send no User-Agent header, for example from a browser extension. */
   userAgent?: string;
+  /** Cookie mode for requests to www.reddit.com. A browser extension passes "include" to match the tab's session. */
+  requestCredentials?: RequestCredentials;
+  signal?: AbortSignal;
 };
+
+type RequestExtras = { requestCredentials?: RequestCredentials | undefined; signal?: AbortSignal | undefined };
+
+function withUserAgent(headers: Record<string, string>, userAgent: string): Record<string, string> {
+  return userAgent ? { ...headers, "User-Agent": userAgent } : headers;
+}
+
+function timeoutSignal(signal: AbortSignal | undefined): AbortSignal {
+  const timeout = AbortSignal.timeout(30_000);
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
 
 type PublicResult = { ok: true; thread: ParsedThread } | { ok: false };
 
@@ -41,15 +56,22 @@ async function readJson(response: Response): Promise<unknown | null> {
   }
 }
 
-async function fetchPublic(fetchImpl: typeof fetch, url: string, userAgent: string): Promise<PublicResult> {
+async function fetchPublic(
+  fetchImpl: typeof fetch,
+  url: string,
+  userAgent: string,
+  extras: RequestExtras,
+): Promise<PublicResult> {
   let response: Response;
   try {
     response = await fetchImpl(url, {
-      headers: { Accept: "application/json", "User-Agent": userAgent },
+      headers: withUserAgent({ Accept: "application/json" }, userAgent),
       cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
+      ...(extras.requestCredentials ? { credentials: extras.requestCredentials } : {}),
+      signal: timeoutSignal(extras.signal),
     });
   } catch {
+    if (extras.signal?.aborted) throw extras.signal.reason;
     return { ok: false };
   }
 
@@ -135,7 +157,12 @@ async function fetchOauthThread(fetchImpl: typeof fetch, url: string, token: str
 }
 
 /** Follow a share link's redirect and return the canonical thread URL it lands on. */
-export async function resolveShareLink(fetchImpl: typeof fetch, url: string, userAgent: string): Promise<string> {
+export async function resolveShareLink(
+  fetchImpl: typeof fetch,
+  url: string,
+  userAgent: string,
+  extras: RequestExtras = {},
+): Promise<string> {
   const failure = new ThreadFetchError(
     "Could not resolve that Reddit share link. Open it in your browser and paste the thread URL instead.",
     "invalid_url",
@@ -144,11 +171,13 @@ export async function resolveShareLink(fetchImpl: typeof fetch, url: string, use
   try {
     response = await fetchImpl(url.trim(), {
       redirect: "follow",
-      headers: { "User-Agent": userAgent },
+      headers: withUserAgent({}, userAgent),
       cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
+      ...(extras.requestCredentials ? { credentials: extras.requestCredentials } : {}),
+      signal: timeoutSignal(extras.signal),
     });
   } catch {
+    if (extras.signal?.aborted) throw extras.signal.reason;
     throw new ThreadFetchError("Could not reach Reddit to resolve that share link.", "network");
   }
   await response.body?.cancel().catch(() => undefined);
@@ -160,7 +189,8 @@ export async function resolveShareLink(fetchImpl: typeof fetch, url: string, use
 export async function fetchRedditThread(options: FetchThreadOptions): Promise<ParsedThread> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const userAgent = options.userAgent ?? REDDIT_USER_AGENT;
-  const pageUrl = isShareLink(options.url) ? await resolveShareLink(fetchImpl, options.url, userAgent) : options.url;
+  const extras: RequestExtras = { requestCredentials: options.requestCredentials, signal: options.signal };
+  const pageUrl = isShareLink(options.url) ? await resolveShareLink(fetchImpl, options.url, userAgent, extras) : options.url;
   const ref = parseThreadUrl(pageUrl);
   if (!ref) {
     throw new ThreadFetchError(
@@ -169,7 +199,7 @@ export async function fetchRedditThread(options: FetchThreadOptions): Promise<Pa
     );
   }
 
-  const publicResult = await fetchPublic(fetchImpl, ref.jsonUrl, userAgent);
+  const publicResult = await fetchPublic(fetchImpl, ref.jsonUrl, userAgent, extras);
   if (publicResult.ok) return publicResult.thread;
 
   if (!hasCredentials(options.credentials)) {
