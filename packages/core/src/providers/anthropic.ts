@@ -6,6 +6,7 @@ import type { ChatSettings } from "./openai";
 
 export const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 export const ANTHROPIC_VERSION = "2023-06-01";
+export const ANTHROPIC_MAX_TOKENS = 16000;
 
 export function buildAnthropicRequest(settings: ChatSettings, system: string, user: string) {
   return {
@@ -21,8 +22,9 @@ export function buildAnthropicRequest(settings: ChatSettings, system: string, us
       },
       body: JSON.stringify({
         model: settings.model,
-        max_tokens: 2500,
-        temperature: 0.2,
+        // Current Claude models reject `temperature`. Thinking tokens count against
+        // max_tokens, so leave room for thinking plus the JSON summary.
+        max_tokens: ANTHROPIC_MAX_TOKENS,
         system,
         messages: [{ role: "user", content: user }],
       }),

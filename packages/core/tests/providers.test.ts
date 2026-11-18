@@ -65,6 +65,12 @@ describe("provider requests", () => {
     expect(body.messages).toHaveLength(2);
   });
 
+  it("omits temperature and leaves room for thinking in the Anthropic body", () => {
+    const body = JSON.parse(buildAnthropicRequest(settings, "system", "user").init.body);
+    expect(body).not.toHaveProperty("temperature");
+    expect(body.max_tokens).toBeGreaterThanOrEqual(8000);
+  });
+
   it("sends Anthropic's browser CORS header", () => {
     const request = buildAnthropicRequest(settings, "system", "user");
     expect(request.init.headers["anthropic-version"]).toBe("2023-06-01");
