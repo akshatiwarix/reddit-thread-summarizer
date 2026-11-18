@@ -65,6 +65,24 @@ describe("provider requests", () => {
     expect(body.messages).toHaveLength(2);
   });
 
+  it("uses max_completion_tokens and no temperature for OpenAI reasoning models", () => {
+    for (const model of ["gpt-5", "gpt-5-mini", "gpt-6-luna", "gpt-6.2-sol", "o3", "o4-mini"]) {
+      const body = JSON.parse(buildOpenAiRequest({ model, apiKey: "k" }, "s", "u").init.body);
+      expect(body).not.toHaveProperty("temperature");
+      expect(body).not.toHaveProperty("max_tokens");
+      expect(body.max_completion_tokens).toBeGreaterThanOrEqual(8000);
+    }
+  });
+
+  it("keeps max_tokens and temperature for non-reasoning OpenAI models", () => {
+    for (const model of ["gpt-4o-mini", "gpt-4.1", "gpt-4"]) {
+      const body = JSON.parse(buildOpenAiRequest({ model, apiKey: "k" }, "s", "u").init.body);
+      expect(body.temperature).toBe(0.2);
+      expect(body.max_tokens).toBe(2500);
+      expect(body).not.toHaveProperty("max_completion_tokens");
+    }
+  });
+
   it("omits temperature and leaves room for thinking in the Anthropic body", () => {
     const body = JSON.parse(buildAnthropicRequest(settings, "system", "user").init.body);
     expect(body).not.toHaveProperty("temperature");
