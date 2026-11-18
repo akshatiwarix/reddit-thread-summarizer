@@ -1,5 +1,5 @@
 import { describeError, type ProviderSettings, type ThreadSummary } from "@rts/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SettingsForm } from "../../components/SettingsForm";
 import { SummaryView } from "../../components/SummaryView";
 import { readActiveTab, type ActiveTab } from "../../lib/active-tab";
@@ -17,6 +17,18 @@ export function App() {
   const [error, setError] = useState("");
   const [summary, setSummary] = useState<ThreadSummary | null>(null);
   const [title, setTitle] = useState("");
+
+  const postId = tab.thread?.postId ?? "";
+  const postIdRef = useRef(postId);
+  postIdRef.current = postId;
+
+  // A summary belongs to one thread. Drop it when the active thread changes.
+  useEffect(() => {
+    setSummary(null);
+    setTitle("");
+    setError("");
+    setPhase((current) => (current === "loading" ? current : "idle"));
+  }, [postId]);
 
   useEffect(() => {
     void loadSettings().then((loaded) => {
@@ -58,18 +70,29 @@ export function App() {
       return;
     }
 
+    const requestedPostId = tab.thread.postId;
     setPhase("loading");
     setError("");
+    setSummary(null);
     setStatusText("Fetching the thread…");
     try {
       const listing = await fetchThreadListing(tab.url);
       setStatusText("Summarizing…");
       const result = await summarizeListing(settings, listing);
+      if (postIdRef.current !== requestedPostId) {
+        // The user moved to another thread while this one was loading.
+        setPhase("idle");
+        return;
+      }
       setSummary(result);
       setTitle(listing.post.title);
       setPhase("ready");
       setShowSettings(false);
     } catch (caught) {
+      if (postIdRef.current !== requestedPostId) {
+        setPhase("idle");
+        return;
+      }
       setPhase("error");
       setError(describeError(caught));
     }
