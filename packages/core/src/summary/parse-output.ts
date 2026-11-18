@@ -1,5 +1,6 @@
 import { asRecord } from "../record";
-import type { BestComment, Disagreement, SummarySide, ThreadSummary } from "../types";
+import { absolutePermalink } from "../permalink";
+import type { BestComment, Disagreement, RedditComment, SummarySide, ThreadSummary } from "../types";
 
 export class SummaryParseError extends Error {
   constructor(message: string) {
@@ -58,9 +59,23 @@ export function normalizeDisagreements(value: unknown): Disagreement[] {
   });
 }
 
-/** Keep at most five comments. Fewer than three is accepted so a short thread still renders. */
-export function normalizeBestComments(value: unknown): BestComment[] {
+function permalinkKey(permalink: string): string {
+  try {
+    const url = new URL(absolutePermalink(permalink));
+    return url.pathname.replace(/\/+$/, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Keep at most five comments. Fewer than three is accepted so a short thread still renders.
+ * When `fetched` is given, keep only comments whose permalink matches a fetched comment,
+ * and use that comment's own permalink so "Jump to comment" never breaks.
+ */
+export function normalizeBestComments(value: unknown, fetched?: readonly Pick<RedditComment, "permalink">[]): BestComment[] {
   if (!Array.isArray(value)) return [];
+  const known = fetched ? new Map(fetched.map((comment) => [permalinkKey(comment.permalink), comment.permalink])) : null;
   const comments: BestComment[] = [];
   for (const item of value) {
     const record = asRecord(item);
@@ -69,13 +84,20 @@ export function normalizeBestComments(value: unknown): BestComment[] {
     const permalink = typeof record?.permalink === "string" ? record.permalink.trim() : "";
     const score = asScore(record?.score);
     if (!author || !excerpt || !permalink || score === null) continue;
-    comments.push({ author, excerpt, score, permalink });
+    let resolved = permalink;
+    if (known) {
+      const match = known.get(permalinkKey(permalink));
+      if (!match) continue;
+      resolved = match;
+    }
+    if (comments.some((comment) => comment.permalink === resolved)) continue;
+    comments.push({ author, excerpt, score, permalink: resolved });
     if (comments.length === 5) break;
   }
   return comments;
 }
 
-export function normalizeSummary(value: unknown): ThreadSummary {
+export function normalizeSummary(value: unknown, fetched?: readonly Pick<RedditComment, "permalink">[]): ThreadSummary {
   const record = asRecord(value);
   if (!record) throw new SummaryParseError("The model JSON was not an object.");
   const tldr = typeof record.tldr === "string" ? record.tldr.trim() : "";
@@ -86,11 +108,11 @@ export function normalizeSummary(value: unknown): ThreadSummary {
     mainPoints: stringList(record.mainPoints),
     agreements: stringList(record.agreements),
     disagreements: normalizeDisagreements(record.disagreements),
-    bestComments: normalizeBestComments(record.bestComments),
+    bestComments: normalizeBestComments(record.bestComments, fetched),
   };
 }
 
-export function parseModelOutput(text: string): ThreadSummary {
+export function parseModelOutput(text: string, fetched?: readonly Pick<RedditComment, "permalink">[]): ThreadSummary {
   let parsed: unknown;
   try {
     parsed = JSON.parse(extractJsonObject(text));
@@ -98,5 +120,5 @@ export function parseModelOutput(text: string): ThreadSummary {
     if (error instanceof SummaryParseError) throw error;
     throw new SummaryParseError("The model returned JSON that could not be parsed.");
   }
-  return normalizeSummary(parsed);
+  return normalizeSummary(parsed, fetched);
 }

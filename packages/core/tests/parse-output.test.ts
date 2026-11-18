@@ -58,4 +58,49 @@ describe("parseModelOutput", () => {
     );
     expect(summary.bestComments).toEqual([]);
   });
+
+  describe("against fetched comments", () => {
+    const fetched = [
+      { permalink: "/r/example/comments/abc/title/c1/" },
+      { permalink: "/r/example/comments/abc/title/c2/" },
+    ];
+
+    it("keeps only best comments whose permalink matches a fetched comment", () => {
+      const summary = parseModelOutput(JSON.stringify(valid), fetched);
+      expect(summary.bestComments.map((comment) => comment.author)).toEqual(["alice", "bob"]);
+    });
+
+    it("matches absolute, query-string, and no-trailing-slash permalinks and uses the fetched one", () => {
+      const summary = parseModelOutput(
+        JSON.stringify({
+          ...valid,
+          bestComments: [
+            { author: "alice", excerpt: "a", score: 1, permalink: "https://www.reddit.com/r/example/comments/abc/title/c1?context=3" },
+            { author: "bob", excerpt: "b", score: 1, permalink: "/r/Example/comments/abc/title/c2" },
+          ],
+        }),
+        fetched,
+      );
+      expect(summary.bestComments.map((comment) => comment.permalink)).toEqual([
+        "/r/example/comments/abc/title/c1/",
+        "/r/example/comments/abc/title/c2/",
+      ]);
+    });
+
+    it("drops invented permalinks and duplicates, and allows an empty list", () => {
+      const summary = parseModelOutput(
+        JSON.stringify({
+          ...valid,
+          bestComments: [
+            { author: "ghost", excerpt: "x", score: 9, permalink: "/r/example/comments/abc/title/zzz/" },
+            { author: "alice", excerpt: "a", score: 1, permalink: "/r/example/comments/abc/title/c1/" },
+            { author: "alice", excerpt: "again", score: 1, permalink: "/r/example/comments/abc/title/c1/" },
+          ],
+        }),
+        fetched,
+      );
+      expect(summary.bestComments).toHaveLength(1);
+      expect(parseModelOutput(JSON.stringify(valid), []).bestComments).toEqual([]);
+    });
+  });
 });

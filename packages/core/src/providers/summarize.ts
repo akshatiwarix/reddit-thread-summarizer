@@ -61,7 +61,7 @@ export async function summarizeThread(options: SummarizeOptions): Promise<Thread
   }
 
   try {
-    return parseModelOutput(text);
+    return parseModelOutput(text, options.thread.comments);
   } catch (error) {
     throw new ProviderError(error instanceof Error ? error.message : "The model returned invalid JSON.", {
       kind: "invalid_output",

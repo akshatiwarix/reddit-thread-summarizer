@@ -34,7 +34,6 @@ export const SUMMARY_JSON_SCHEMA = {
     },
     bestComments: {
       type: "array",
-      minItems: 3,
       maxItems: 5,
       items: {
         type: "object",
