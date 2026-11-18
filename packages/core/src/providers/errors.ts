@@ -82,3 +82,27 @@ export function errorFromResponse(provider: ProviderId, status: number, bodyText
     status,
   });
 }
+
+/** Short, key-free "Name: message" for a thrown error, so a report says what actually failed. */
+export function describeCause(error: unknown): string {
+  if (!(error instanceof Error)) return "unknown error";
+  const message = error.message
+    .replace(/bearer\s+\S+/gi, "[redacted]")
+    .replace(/\bsk-[\w-]+/gi, "[redacted]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+  return message && message !== error.name ? `${error.name}: ${message}` : error.name;
+}
+
+/** A real network failure: the request never produced a response. */
+export function networkError(provider: ProviderId, error: unknown): ProviderError {
+  const name = error instanceof Error ? error.name : "";
+  if (name === "TimeoutError" || name === "AbortError") {
+    return new ProviderError("The provider took too long to respond. Try again.", { kind: "network", provider });
+  }
+  return new ProviderError(`Could not reach the provider (${describeCause(error)}). Check the connection and try again.`, {
+    kind: "network",
+    provider,
+  });
+}

@@ -6,7 +6,7 @@ import { anthropicDelta, buildAnthropicRequest } from "./anthropic";
 import { buildGeminiRequest, geminiDelta } from "./gemini";
 import { buildOpenAiRequest, openAiDelta, type ChatSettings } from "./openai";
 import { buildOpenRouterRequest } from "./openrouter";
-import { ProviderError } from "./errors";
+import { ProviderError, networkError } from "./errors";
 import { streamCompletion } from "./stream";
 
 export type SummarizeOptions = {
@@ -80,10 +80,7 @@ export async function summarizeThread(options: SummarizeOptions): Promise<Thread
     });
   } catch (error) {
     if (error instanceof ProviderError || options.signal?.aborted) throw error;
-    throw new ProviderError("Could not reach the provider. Check the connection and try again.", {
-      kind: "network",
-      provider: options.provider,
-    });
+    throw networkError(options.provider, error);
   }
   if (pending !== null) emit(text);
 
