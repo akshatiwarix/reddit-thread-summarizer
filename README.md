@@ -24,9 +24,9 @@ The model sees the post plus up to 120 comments, highest score first, trimmed to
 
 Chrome Web Store: coming soon. The listing text and permission justifications are in [docs/store-listing.md](docs/store-listing.md).
 
-From the GitHub release zip:
+From the [Releases](https://github.com/akshatiwarix/reddit-thread-summarizer/releases) page:
 
-1. Download `reddit-thread-summarizer-v1.0.0.zip` from the [v1.0.0 release](https://github.com/akshatiwarix/reddit-thread-summarizer/releases/tag/v1.0.0) and unzip it. If the release is not published yet, build the zip with `pnpm package:extension` (it writes `release/reddit-thread-summarizer-v1.0.0.zip`).
+1. Download `reddit-thread-summarizer-v1.0.0.zip` from the [v1.0.0 release](https://github.com/akshatiwarix/reddit-thread-summarizer/releases/tag/v1.0.0) and unzip it.
 2. Open `chrome://extensions` and turn on Developer mode.
 3. Choose "Load unpacked" and select the unzipped folder (the one that contains `manifest.json`).
 4. Open a Reddit thread, click the toolbar icon, and press Summarize.
