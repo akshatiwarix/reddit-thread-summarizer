@@ -41,6 +41,8 @@ export function Home() {
 
     setPhase("loading");
     setError("");
+    setThread(null);
+    setSummary(null);
     setStatusText("Fetching the thread…");
     try {
       const response = await fetch("/api/thread", {
