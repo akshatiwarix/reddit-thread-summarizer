@@ -3,6 +3,7 @@
 import {
   describeError,
   summarizeThread,
+  ThreadFetchError,
   type ParsedThread,
   type ProviderSettings,
   type ThreadSummary,
@@ -45,14 +46,27 @@ export function Home() {
     setSummary(null);
     setStatusText("Fetching the thread…");
     try {
-      const response = await fetch("/api/thread", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const payload = (await response.json()) as { thread?: ParsedThread; error?: string };
+      let response: Response;
+      try {
+        response = await fetch("/api/thread", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+      } catch {
+        throw new ThreadFetchError("Could not reach the server. Check the connection and try again.", "network");
+      }
+      let payload: { thread?: ParsedThread; error?: string };
+      try {
+        payload = (await response.json()) as { thread?: ParsedThread; error?: string };
+      } catch {
+        throw new ThreadFetchError(
+          `The server sent an unexpected response (HTTP ${response.status}). It may have timed out. Try again.`,
+          "network",
+        );
+      }
       if (!response.ok || !payload.thread) {
-        throw new Error(payload.error || "Could not fetch that thread.");
+        throw new ThreadFetchError(payload.error || "Could not fetch that thread.", "network");
       }
       setThread(payload.thread);
       setStatusText("Summarizing…");
