@@ -8,7 +8,7 @@ A summary has:
 - the main points
 - where people agree
 - where people split, with both sides
-- three to five of the best comments, each with a link that jumps to that comment
+- up to five of the best comments, each with a link that jumps to that comment
 
 You bring your own API key. OpenAI, Anthropic, Google Gemini, and OpenRouter are supported. The key stays in the browser.
 
@@ -20,9 +20,9 @@ apps/web         Next.js site, deployed on Vercel with this directory as the pro
 packages/core    thread parsing, trimming, prompts, provider calls
 ```
 
-On a Reddit thread, the extension fetches that thread's `.json` from reddit.com and asks the provider you picked for a JSON summary. The website asks you to paste a URL. A server route fetches the thread (and, if Reddit blocks the public endpoint, falls back to Reddit's app-only OAuth API). The browser then calls the provider directly. The key is never sent to the server.
+In the extension, click **Summarize this tab** on a Reddit thread, or paste any Reddit post link into the field and click **Summarize link**. Pasted links can be reddit.com (including old, new and mobile), `redd.it` short links, and the `/r/<sub>/s/<id>` links from Reddit's Share button. Links to best comments from a pasted link open in a new tab. The extension fetches the thread's `.json` from reddit.com and asks the provider you picked for a summary. The panel and the website show progress (Fetching thread…, Summarizing…, Writing summary…) and the summary fills in as the model writes it. The website asks you to paste a URL. A server route fetches the thread (and, if Reddit blocks the public endpoint, falls back to Reddit's app-only OAuth API). The browser then calls the provider directly. The key is never sent to the server.
 
-The model sees the post plus up to 200 comments, highest score first. Nested replies are flattened and keep their depth. The text is trimmed so it fits a small model's context. "more comments" stubs from Reddit are not expanded.
+The model sees the post plus up to 120 comments, highest score first, trimmed to 40,000 characters. Nested replies are flattened and keep their depth. Output is capped at 4,096 tokens at low reasoning effort to keep it quick. "more comments" stubs from Reddit are not expanded.
 
 ## Install the extension from a GitHub release
 
@@ -45,9 +45,11 @@ Open Settings in the extension, or "API key" on the website. Pick a provider, a 
 | Provider | Where to create a key | Default model |
 | --- | --- | --- |
 | OpenAI | https://platform.openai.com/api-keys | `gpt-6-luna` |
-| Anthropic | https://console.anthropic.com/settings/keys | `claude-sonnet-5-5` |
+| Anthropic | https://console.anthropic.com/settings/keys | `claude-haiku-5-5` |
 | Google Gemini | https://aistudio.google.com/apikey | `gemini-3.6-flash` |
 | OpenRouter | https://openrouter.ai/keys | `openai/gpt-6-luna` |
+
+Other models in the list: OpenAI `gpt-6.1-terra`, `gpt-6.2-sol`, `gpt-6.2-astra`; Anthropic `claude-sonnet-5-5`; Gemini `gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`; OpenRouter `anthropic/claude-haiku-5.5`, `google/gemini-3.6-flash`, `anthropic/claude-sonnet-5.5`. Defaults are the fast, cheap choices. Saved settings are kept, so if you already chose another model you stay on it until you change it in Settings.
 
 The extension stores the key in `chrome.storage.local`. The website stores it in `localStorage` under `rts.settings.v1`. A rejected key or a rate limit is shown as its own error.
 

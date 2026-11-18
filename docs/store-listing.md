@@ -36,7 +36,7 @@ These match the production manifest in the release zip.
 | --- | --- |
 | storage | Save the chosen provider, model, and API key in chrome.storage.local on this device. |
 | sidePanel | Show the summary UI in the Chrome side panel. The toolbar icon opens it. |
-| https://www.reddit.com/*, https://reddit.com/*, https://old.reddit.com/*, https://m.reddit.com/*, https://np.reddit.com/*, https://new.reddit.com/* | Read the active tab URL when it is a Reddit page, and download that thread's `.json` when you click Summarize. The request includes your Reddit cookies, as opening the page would. |
+| https://www.reddit.com/*, https://reddit.com/*, https://old.reddit.com/*, https://m.reddit.com/*, https://np.reddit.com/*, https://new.reddit.com/* | Read the active tab URL when it is a Reddit page, and download that thread's `.json` when you click Summarize this tab or Summarize link (for a link you pasted, including share links that redirect on reddit.com). The request includes your Reddit cookies, as opening the page would. |
 | https://api.openai.com/* | Send the thread text and your OpenAI key directly to OpenAI, only if you choose OpenAI. |
 | https://api.anthropic.com/* | Send the thread text and your Anthropic key directly to Anthropic, only if you choose Anthropic. |
 | https://generativelanguage.googleapis.com/* | Send the thread text and your Gemini key directly to Google, only if you choose Gemini. |
@@ -56,4 +56,4 @@ Replace `YOUR-DEPLOYMENT` with the Vercel hostname after the web app is deployed
 
 ## Single purpose
 
-Summarize the Reddit thread in the current tab.
+Summarize the Reddit thread in the current tab, or a Reddit post link pasted into the side panel.

@@ -8,7 +8,7 @@ Summarize any Reddit thread into something you can read in 30 seconds. Ships as 
   - `apps/extension`: Chrome extension built with WXT + React + TypeScript (Manifest V3).
   - `apps/web`: Next.js web app deployed on Vercel.
   - `packages/core`: shared thread parsing, provider calls, prompt and summary types.
-- **Extension UX.** On a Reddit thread page, open the Chrome side panel and click Summarize. The extension reads the thread's JSON from reddit.com directly (same origin as the open tab), so no server is involved.
+- **Extension UX.** Two ways in, both in the side panel and both server-free. (1) On a Reddit thread page, click Summarize this tab. (2) Paste any Reddit post link into the field and click Summarize link, from any page. Supported links: reddit.com, www, old, new, m and np hosts, `redd.it/<id>` short links, and `/r/<sub>/s/<id>` share links. The extension fetches the thread's JSON from reddit.com directly and reuses the `packages/core` URL parsing, share-link redirect resolution and thread fetch. No new host permission is needed: a `redd.it` link is rewritten to `www.reddit.com/comments/<id>`, and share links redirect within `www.reddit.com`. A pasted link's best-comment links open in a new tab, not in the panel. Starting a new run (other source or other link) clears the previous summary.
 - **Web app UX.** Paste a Reddit thread URL, get the same summary view. A Vercel server route fetches the thread JSON. If Reddit blocks Vercel's IPs, fall back to Reddit's official OAuth API (app-only), using `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` env vars.
 - **AI: bring your own key.** Providers: OpenAI, Anthropic, Google Gemini, OpenRouter. The user picks a provider and model and pastes a key. The key is stored only in the user's browser (`chrome.storage.local` in the extension, `localStorage` in the web app) and requests go straight from the browser to the provider. Keys never touch our server and are never logged.
 - **Summary contents.**
@@ -17,8 +17,12 @@ Summarize any Reddit thread into something you can read in 30 seconds. Ships as 
   3. Where people agree
   4. Where people split (the main disagreements, with both sides)
   5. 3 to 5 best comments, each with a link that jumps to that comment
-- **Input cap.** The post plus up to the top 200 comments by score (nested replies included, flattened with depth), trimmed to fit the model's context.
-- **Output format.** The model returns structured JSON that matches a shared schema in `packages/core`, which both UIs render.
+- **Input cap.** The post plus up to the top 120 comments by score (nested replies included, flattened with depth), trimmed to 40,000 characters of prompt text, dropping the lowest-scored comments first. (Was 200 comments and 60,000 characters; smaller input reaches the first token sooner.)
+- **Output format.** The model streams markdown with five fixed `##` sections (TL;DR, Main points, Where people agree, Where people split, Best comments). `packages/core` parses the text as it arrives and both UIs render the growing summary. Best comments are `###` permalink lines with a `>` quote; they are kept only when the permalink matches a fetched comment, and author and score come from the thread, not the model. (Was a single JSON object parsed at the end.)
+- **Streaming and progress.** All four providers are called with streaming on (server-sent events), directly from the browser. Both UIs show Fetching thread…, Summarizing… (waiting for the first text) and Writing summary… (text arriving). Errors before the stream starts (bad key, rate limit) keep their own messages; an error or cutoff mid-stream discards the partial summary and shows the error.
+- **Output cap and reasoning.** 4,096 output tokens on every provider (`max_completion_tokens` for OpenAI reasoning models, `max_tokens` for OpenAI chat models, OpenRouter and Anthropic, `maxOutputTokens` for Gemini), with reasoning effort set to low (`reasoning_effort` OpenAI, `output_config.effort` Anthropic Claude 4.5+, `thinkingConfig.thinkingLevel` Gemini 3+, `reasoning.effort` OpenRouter). Was 16,000 for some reasoning models.
+- **Default models** (fast and cheap; verified against the official docs and OpenRouter's model list on 2026-11-18): OpenAI `gpt-6-luna`, Anthropic `claude-haiku-5-5`, Google `gemini-3.6-flash`, OpenRouter `openai/gpt-6-luna`. Other catalog models stay selectable and any model ID can be typed.
+- **Dev timing.** Development builds log fetch time, time to first model text and total time to the console. Production builds log nothing.
 - **Distribution.**
   - GitHub release `v1.0.0` with the extension zip and "load unpacked" steps in the README.
   - Chrome Web Store submission today (needs the $5 developer account, and Akshat submits).
@@ -26,6 +30,12 @@ Summarize any Reddit thread into something you can read in 30 seconds. Ships as 
 - **README.** What it does, a screenshot, the live link, install steps (zip and Web Store), key setup, and local development. No challenge or day badges.
 - **Models for building.** Claude Code plans with Opus 5.5 and builds with Sonnet 5.5 (`opusplan`, set in `.claude/settings.json`).
 - **Git workflow.** Work directly on `main`. Commit and push after every small chunk. Aim for about 100 meaningful commits in total, never empty or fake ones.
+
+## Open questions
+
+- Does low reasoning effort keep summary quality acceptable on long threads? Not measured; raise `REASONING_EFFORT` in `packages/core/src/providers/limits.ts` if summaries feel shallow.
+- Gemini default: `gemini-3.6-flash` (kept) or `gemini-3.8-flash`? The docs list both as stable Flash; `gemini-3.5-flash-lite` is cheaper but is Flash-Lite.
+- Request shapes for streaming, `reasoning_effort`, `output_config.effort`, `thinkingLevel` and OpenRouter's `reasoning` are taken from the docs but have not been run against live keys.
 
 ## Out of scope for v1
 

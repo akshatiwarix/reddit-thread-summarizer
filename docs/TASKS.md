@@ -31,18 +31,18 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Read the post from the first listing
 - [x] Flatten nested replies and keep depth
 - [x] Skip deleted bodies and `more` placeholders
-- [x] Select the top 200 comments by score
+- [x] Select the top 200 comments by score (now 120, see Speed and paste-a-link)
 - [x] Parse a full Reddit thread listing
 - [x] Test post extraction and nested depth
-- [x] Test the 200 comment cap and sort order
+- [x] Test the 200 comment cap and sort order (now 120)
 - [x] Trim comment and post bodies to per-field caps
 - [x] Drop lowest-scored comments until the thread fits the character budget
 - [x] Test truncation of a single long comment
 - [x] Test dropping comments to meet the budget
 - [x] Render a trimmed thread as prompt text with depth markers
 - [x] Test that the prompt keeps permalinks and scores
-- [x] Define the shared summary JSON schema
-- [x] Write the system prompt that demands that schema
+- [x] Define the shared summary JSON schema (replaced by streaming markdown, see Speed and paste-a-link)
+- [x] Write the system prompt that demands that schema (now the markdown layout)
 - [x] Build the user prompt from a trimmed thread
 - [x] Strip markdown fences from model text
 - [x] Extract the first JSON object from surrounding prose
@@ -91,6 +91,26 @@ Ordered, commit-sized checklist for v1. Check an item when that chunk is committ
 - [x] Add the side panel HTML entry and React mount
 - [x] Draw an original icon at 128, 48, 32, and 16
 - [x] Add the extension TypeScript project used for typecheck
+
+## Speed and paste-a-link
+
+- [x] Cap input at 120 comments and 40k characters
+- [x] Default Anthropic to Haiku and verify all model IDs against official docs
+- [x] Stream OpenAI, Anthropic, Gemini and OpenRouter responses over server-sent events
+- [x] Replace the JSON reply with streaming markdown sections and a tolerant incremental parser
+- [x] Match best comments to fetched permalinks (absolute, old.reddit, query strings) and take author and score from the thread
+- [x] Cap output at 4096 tokens at low reasoning effort on every provider
+- [x] Let callers pick cookie mode and abort thread fetches
+- [x] Warm the provider connection while the thread downloads
+- [x] Add a development-only stage timer
+- [x] Test URL parsing for redd.it, share links and look-alike hosts
+- [x] Test share-link redirect resolution
+- [x] Test SSE parsing, partial summaries, mid-stream errors and the new caps
+- [x] Extension: paste a Reddit link and summarize it, next to Summarize this tab
+- [x] Extension: validate the pasted link and clear the previous summary on a new run
+- [x] Extension: open a pasted link's best comments in a new tab
+- [x] Extension and web: Fetching, Summarizing and Writing progress states with the summary filling in
+- [x] Update PLAN, README, permissions notes and the store listing
 
 ## Web app
 
