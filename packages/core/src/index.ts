@@ -21,9 +21,9 @@ export { RedditParseError } from "./reddit/errors";
 export { parseThreadListing, MAX_COMMENTS } from "./reddit/parse";
 export { DEFAULT_MAX_CHARS, DEFAULT_MAX_COMMENT_CHARS, DEFAULT_MAX_POST_CHARS, trimThread } from "./reddit/trim";
 export type { TrimOptions } from "./reddit/trim";
-export { fetchRedditThread, fetchAppOnlyToken, REDDIT_USER_AGENT } from "./reddit/fetch-thread";
-export type { FetchThreadOptions, RedditCredentials } from "./reddit/fetch-thread";
-export { ThreadFetchError, threadFetchStatus } from "./reddit/fetch-error";
+export { fetchRedditThread, REDDIT_USER_AGENT } from "./reddit/fetch-thread";
+export type { FetchThreadOptions } from "./reddit/fetch-thread";
+export { ThreadFetchError } from "./reddit/fetch-error";
 export type { ThreadFetchKind } from "./reddit/fetch-error";
 
 export { buildSystemPrompt, buildUserPrompt } from "./summary/prompt";

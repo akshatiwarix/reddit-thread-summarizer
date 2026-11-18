@@ -87,6 +87,5 @@ function buildRef(subreddit: string, postIdRaw: string, slug: string | undefined
     ...(commentId ? { commentId } : {}),
     canonicalUrl: `https://www.reddit.com${stem}${slugPath}/`,
     jsonUrl: `https://www.reddit.com${stem}.json?${JSON_QUERY}`,
-    oauthJsonUrl: `https://oauth.reddit.com${stem}.json?${JSON_QUERY}`,
   };
 }

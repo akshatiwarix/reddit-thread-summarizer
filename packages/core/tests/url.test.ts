@@ -12,7 +12,6 @@ describe("parseThreadUrl", () => {
       slug: "some_title",
       canonicalUrl: "https://www.reddit.com/r/Example/comments/abc123/some_title/",
       jsonUrl: `https://www.reddit.com/r/Example/comments/abc123.json?${QUERY}`,
-      oauthJsonUrl: `https://oauth.reddit.com/r/Example/comments/abc123.json?${QUERY}`,
     });
     expect(ref?.commentId).toBeUndefined();
   });

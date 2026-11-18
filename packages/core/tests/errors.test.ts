@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { describeError } from "../src/describe-error";
 import { errorFromResponse, ProviderError } from "../src/providers/errors";
-import { ThreadFetchError, threadFetchStatus } from "../src/reddit/fetch-error";
+import { ThreadFetchError } from "../src/reddit/fetch-error";
 
 describe("errorFromResponse", () => {
   it("maps unauthorized and invalid-key bodies to a bad key", () => {
@@ -30,13 +30,5 @@ describe("describeError", () => {
     expect(describeError(new ThreadFetchError("Missing.", "not_found"))).toBe("Missing.");
     expect(describeError(new TypeError("Failed to fetch"))).toContain("Could not reach");
     expect(describeError("nope")).toBe("Something went wrong.");
-  });
-});
-
-describe("threadFetchStatus", () => {
-  it("uses 400, 404, and 502", () => {
-    expect(threadFetchStatus(new ThreadFetchError("bad", "invalid_url"))).toBe(400);
-    expect(threadFetchStatus(new ThreadFetchError("gone", "not_found"))).toBe(404);
-    expect(threadFetchStatus(new ThreadFetchError("blocked", "blocked"))).toBe(502);
   });
 });

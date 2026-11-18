@@ -9,9 +9,3 @@ export class ThreadFetchError extends Error {
     this.kind = kind;
   }
 }
-
-export function threadFetchStatus(error: ThreadFetchError): number {
-  if (error.kind === "invalid_url") return 400;
-  if (error.kind === "not_found") return 404;
-  return 502;
-}

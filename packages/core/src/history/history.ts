@@ -32,7 +32,7 @@ export type NewHistoryEntry = {
 };
 
 /**
- * Where entries live. Each app supplies one (chrome.storage.local, localStorage). `read` returns
+ * Where entries live. The extension supplies one backed by chrome.storage.local. `read` returns
  * whatever was stored, untrusted; `write` replaces everything and must throw if it cannot persist.
  */
 export type HistoryStorage = {

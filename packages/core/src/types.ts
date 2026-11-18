@@ -76,5 +76,4 @@ export type ThreadRef = {
   commentId?: string;
   canonicalUrl: string;
   jsonUrl: string;
-  oauthJsonUrl: string;
 };
