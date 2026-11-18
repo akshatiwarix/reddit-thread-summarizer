@@ -1,0 +1,126 @@
+:root {
+  color-scheme: light;
+  --bg: #f3efe4;
+  --paper: #fffaf2;
+  --ink: #1c1914;
+  --muted: #5f584e;
+  --line: #e3d8c6;
+  --accent: #b8612d;
+  --accent-ink: #fff8f2;
+  --danger: #8d2b2b;
+  --danger-bg: #f8e8e4;
+  --sans: "Segoe UI", system-ui, sans-serif;
+  --serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.45 var(--sans);
+}
+
+button, input, select { font: inherit; color: inherit; }
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  background: var(--ink);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+
+button:disabled { opacity: 0.65; cursor: progress; }
+
+button.ghost, a.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.primary { background: var(--accent); }
+
+.app { padding: 0.9rem 0.9rem 1.4rem; }
+
+.top, .row, .key-row, .actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top { justify-content: space-between; align-items: flex-start; }
+
+.mark {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+}
+
+.sub, .hint, .using, .muted, .byline { color: var(--muted); }
+
+.sub, .using, .hint, .byline { margin: 0.15rem 0 0; }
+
+.actions { margin: 0.85rem 0 0.4rem; align-items: baseline; flex-wrap: wrap; }
+
+.settings, .summary, .error {
+  margin-top: 0.8rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.8rem;
+}
+
+.settings { display: grid; gap: 0.65rem; }
+
+label { display: grid; gap: 0.25rem; font-size: 0.82rem; }
+
+input, select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+}
+
+.key-row input { flex: 1; }
+
+.saved { color: #2d5a45; font-size: 0.85rem; }
+
+.error { color: var(--danger); background: var(--danger-bg); border-color: #efcfc8; }
+
+.summary h2, .summary h3, .summary h4 { font-family: var(--serif); font-weight: 600; }
+
+.summary h2 { margin: 0 0 0.4rem; font-size: 1.2rem; }
+
+.summary h3 { margin: 0.9rem 0 0.3rem; font-size: 1rem; }
+
+.summary h4 { margin: 0.4rem 0 0.2rem; font-size: 0.95rem; }
+
+.summary p, .summary ul, .summary ol { margin: 0.2rem 0; }
+
+.summary li + li { margin-top: 0.35rem; }
+
+.split + .split { margin-top: 0.45rem; }
+
+.comments { list-style: none; padding: 0; }
+
+.comments li {
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--line);
+}
+
+blockquote {
+  margin: 0.25rem 0;
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--accent);
+}
+
+a { color: var(--accent); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

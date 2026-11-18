@@ -1,0 +1,16 @@
+{
+  "name": "reddit-thread-summarizer",
+  "private": true,
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm --filter @rts/core build && pnpm -r --if-present build",
+    "package:extension": "node scripts/package-extension.mjs",
+    "dev:web": "pnpm --filter @rts/web dev",
+    "dev:extension": "pnpm --filter @rts/extension dev"
+  }
+}
